@@ -89,7 +89,7 @@ test('mobile navigation opens, navigates and closes', async ({ page }) => {
   await expect(toggle).toHaveAttribute('aria-expanded', 'true')
   await expect(page.locator('#mobile-menu').getByRole('link', { name: /Inventory|Inquiry/ })).toHaveCount(0)
   await page.locator('#mobile-menu').getByRole('link', { name: 'Sign In', exact: true }).click()
-  await expect(page).toHaveURL(/\/inventory\?account=1/)
+  await expect(page).toHaveURL(/\/sign-in/)
   await expect(toggle).toHaveAttribute('aria-expanded', 'false')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })

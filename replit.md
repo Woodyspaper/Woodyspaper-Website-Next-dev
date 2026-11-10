@@ -12,7 +12,9 @@ Wholesale paper and packaging storefront for South Florida businesses, ported fr
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Shared environment: `VITE_LIGHTSPEED_STORE_ID` (the public store ID, used by the storefront and API).
-- Replit Secret: `LIGHTSPEED_API_TOKEN`, an Ecwid/Lightspeed API token with `read_catalog` access. It is used only by the API server and never sent to the browser.
+- Replit Secret: `LIGHTSPEED_API_TOKEN`, an Ecwid/Lightspeed API token with `read_catalog`, `read_customers`, `read_orders`, and `read_promotion` access. It is used only by the API server and never sent to the browser.
+- Website authentication uses managed Clerk; configure it in the workspace Auth pane. Provider checkout sign-in remains separate.
+- After changing Ecwid custom-app scopes, reinstall that custom app and replace the secret token; the old token is invalidated. Do not print tokens or customer data during permission checks.
 - Configure both values through Replit's environment/secrets settings and restart the API server after changes. The API also accepts `LIGHTSPEED_STORE_ID` if you prefer a server-only store ID.
 
 ## Stack
@@ -20,10 +22,11 @@ Wholesale paper and packaging storefront for South Florida businesses, ported fr
 - pnpm workspaces, Node.js 24, TypeScript 5.9
 - Frontend: React + Vite, Tailwind CSS v4
 - API: Express 5, with the catalog endpoint defined in `lib/api-spec/openapi.yaml`
-- Store, cart, and customer accounts: existing external Lightspeed / Ecwid embed
+- Checkout/cart: existing external Lightspeed / Ecwid embed
+- Website accounts: managed Clerk authentication plus stable internal UUIDs in PostgreSQL; optional provider links are stored separately. Linking and unlinking never replaces the website identity.
 - The custom inventory page filters public Lightspeed categories, attributes, and product options before pagination. A complete catalog snapshot is cached for 60 seconds; hidden provider attributes are excluded. Size filtering prefers structured size values and otherwise extracts explicit dimensions from product names, normalizing mixed fractions and decimals. Unavailable size filters are hidden.
 - Supply inquiries: existing FormSubmit endpoint with mailto fallback
-- The scaffold API/database packages are not used by this frontend-only website.
+- API/database packages power the public catalog and private account endpoints; account responses are private/no-store. Customer linking requires a verified website email and an exact provider match. Pricing offers are conditional; catalog prices remain public prices.
 
 ## Where things live
 
@@ -35,7 +38,8 @@ Wholesale paper and packaging storefront for South Florida businesses, ported fr
 
 ## Architecture decisions
 
-- Keep the imported store and inquiry providers rather than replacing them or introducing a new database.
+- Keep the imported checkout and inquiry providers. Website accounts are independent of the inventory provider; do not use the embedded store’s localStorage customer data as authentication.
+- Do not expose other customers’ orders or provider addresses, payment details, admin notes, or download links. Revalidate linked email ownership before reading provider data.
 - Ecwid mutates page metadata and owns its hash routes. Keep description/social tags outside React ownership so store navigation cannot crash React.
 
 ## Product
@@ -45,7 +49,7 @@ Wholesale paper and packaging storefront for South Florida businesses, ported fr
 
 ## User preferences
 
-Preserve the original app; this migration does not add features.
+All work stays in the development repository `Woodyspaper/Woodyspaper-Website-Next-dev`, branch `dev/inventory-backend`. Never push to the original `origin` repository. Preserve existing branding and public catalog behavior.
 
 ## Gotchas
 

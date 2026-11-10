@@ -1,3 +1,4 @@
+@layer theme, base, clerk, components, utilities;
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
@@ -181,3 +182,10 @@
   color: var(--color-brand-blue, #0070bb);
   text-align: center;
 }
+
+/* Clerk pseudo-states (outside any layer) */
+.cl-formFieldInput::placeholder { color: #64748b; opacity: 1; }
+.cl-formButtonPrimary:hover { background-color: var(--color-brand-blue-dark); }
+.cl-formFieldInput:focus { border-color: var(--color-brand-blue); box-shadow: 0 0 0 3px rgb(0 112 187 / 0.18); }
+.cl-socialButtonsBlockButton:hover { background-color: var(--color-brand-mist); }
+.cl-footerActionLink:hover { color: var(--color-brand-blue-dark); }

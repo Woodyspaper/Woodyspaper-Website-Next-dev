@@ -13,6 +13,108 @@ tags:
   - name: catalog
     description: Provider-backed product catalog
 paths:
+  /account:
+    get:
+      operationId: getAccount
+      tags: [account]
+      responses:
+        "200":
+          description: Permanent website account for the authenticated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WoodyAccount"
+        "401":
+          description: Sign in required
+  /account/links/lightspeed:
+    post:
+      operationId: linkLightspeedAccount
+      tags: [account]
+      description: Link using only the authenticated user's verified primary email. No client customer ID is accepted.
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WoodyAccount"
+        "401":
+          description: Sign in required
+        "403":
+          description: Email verification required
+        "404":
+          description: No matching provider customer
+        "409":
+          description: Customer already linked or ambiguous match
+        "503":
+          description: Provider unavailable or missing permissions
+  /account/links/{linkId}:
+    delete:
+      operationId: unlinkProviderAccount
+      tags: [account]
+      parameters:
+        - name: linkId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Link removed; website account retained
+        "401":
+          description: Sign in required
+        "404":
+          description: Link not found
+  /account/lightspeed/pricing:
+    get:
+      operationId: getAccountPricing
+      tags: [account]
+      responses:
+        "200":
+          description: Customer group and eligible pricing offers, subject to checkout conditions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountPricing"
+        "401":
+          description: Sign in required
+        "409":
+          description: No verified link for this store
+        "503":
+          description: Provider unavailable or missing permissions
+  /account/lightspeed/orders:
+    get:
+      operationId: getAccountOrders
+      tags: [account]
+      parameters:
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100000
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        "200":
+          description: Orders belonging only to the linked customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountOrderPage"
+        "401":
+          description: Sign in required
+        "409":
+          description: No verified link for this store
+        "503":
+          description: Provider unavailable or missing permissions
   /healthz:
     get:
       operationId: healthCheck
@@ -110,6 +212,80 @@ paths:
           description: Catalog provider is not configured
 components:
   schemas:
+    WoodyAccount:
+      type: object
+      required: [id, email, emailVerified, displayName, links, activeLightspeedStoreId]
+      properties:
+        id: { type: string }
+        email: { type: string }
+        emailVerified: { type: boolean }
+        displayName: { type: string }
+        activeLightspeedStoreId: { type: ["string", "null"] }
+        links:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProviderAccountLink"
+    ProviderAccountLink:
+      type: object
+      required: [id, provider, storeId, linkedEmail, createdAt]
+      properties:
+        id: { type: string }
+        provider: { type: string }
+        storeId: { type: string }
+        linkedEmail: { type: string }
+        createdAt: { type: string }
+    AccountPricing:
+      type: object
+      required: [groupName, taxExempt, offers, note]
+      properties:
+        groupName: { type: string }
+        taxExempt: { type: boolean }
+        note: { type: string }
+        offers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccountPricingOffer"
+    AccountPricingOffer:
+      type: object
+      required: [name, amount, discountType, appliesTo, minimumSubtotal, conditional]
+      properties:
+        name: { type: string }
+        amount: { type: number }
+        discountType: { type: string }
+        appliesTo: { type: string }
+        minimumSubtotal: { type: ["number", "null"] }
+        conditional: { type: boolean }
+    AccountOrderPage:
+      type: object
+      required: [items, total, offset, limit]
+      properties:
+        total: { type: integer }
+        offset: { type: integer }
+        limit: { type: integer }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccountOrder"
+    AccountOrder:
+      type: object
+      required: [id, createdAt, total, paymentStatus, fulfillmentStatus, items]
+      properties:
+        id: { type: string }
+        createdAt: { type: string }
+        total: { type: number }
+        paymentStatus: { type: string }
+        fulfillmentStatus: { type: string }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccountOrderItem"
+    AccountOrderItem:
+      type: object
+      required: [name, quantity, unitPrice]
+      properties:
+        name: { type: string }
+        quantity: { type: number }
+        unitPrice: { type: number }
     HealthStatus:
       type: object
       properties:

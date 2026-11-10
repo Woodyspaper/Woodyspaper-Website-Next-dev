@@ -34,16 +34,17 @@ export function StoreAccount({ ready, resultsId, accountHref }: StoreAccountProp
     <div className="flex shrink-0 flex-wrap items-center justify-center gap-x-4 gap-y-2">
       {customer ? (
         <p className="max-w-48 truncate text-sm text-slate-600" title={customer.email}>
-          Hi, <span className="font-semibold text-ink">{firstName}</span>
+          Checkout: <span className="font-semibold text-ink">{firstName}</span>
         </p>
       ) : null}
       <button
         type="button"
         onClick={openAccount}
+        title="Lightspeed checkout has its own sign-in, separate from your Woody's Paper website account"
         disabled={!ready && !accountHref}
         className="rounded-full border border-brand-blue/30 bg-white px-6 py-3 text-sm font-semibold text-brand-blue transition-colors hover:bg-brand-mist focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:opacity-50 active:scale-95"
       >
-        {customer ? 'My Account' : 'Sign In'}
+        {customer ? 'Checkout account' : 'Checkout sign-in'}
       </button>
       {customer ? (
         <button
@@ -52,7 +53,7 @@ export function StoreAccount({ ready, resultsId, accountHref }: StoreAccountProp
           disabled={!ready}
           className="text-sm font-semibold text-slate-500 transition-colors hover:text-brand-blue disabled:opacity-50"
         >
-          Sign out
+          Sign out of checkout
         </button>
       ) : null}
     </div>

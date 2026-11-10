@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import type { MouseEvent } from 'react'
 import Link from '@/lib/navigation'
 import { usePathname } from '@/lib/navigation'
-import { ACCOUNT_PATH, useStoreCustomer } from '@/services/storeCustomer'
+import { useUser } from '@clerk/react'
 import { Logo } from './Logo'
 import { HeaderSearch } from './HeaderSearch'
 import { CategoryBar } from './CategoryBar'
@@ -12,10 +12,13 @@ import { CategoryBar } from './CategoryBar'
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
-  const customer = useStoreCustomer()
-  // Signed in: the customer's first name (or "My Account" if the store has no name for them).
-  const accountLabel = customer ? customer.name?.trim().split(/\s+/)[0] || 'My Account' : 'Sign In'
-  const accountTitle = customer ? `Your account (${customer.email})` : undefined
+  const { isLoaded, isSignedIn, user } = useUser()
+  const customer = isLoaded && isSignedIn ? user : null
+  // Signed in to the Woody's Paper website account: first name, else "My Account".
+  const accountLabel = customer ? customer.firstName?.trim() || 'My Account' : 'Sign In'
+  const accountEmail = customer?.primaryEmailAddress?.emailAddress
+  const accountTitle = customer ? `Your Woody's Paper account${accountEmail ? ` (${accountEmail})` : ''}` : 'Sign in to your Woody\'s Paper account'
+  const ACCOUNT_PATH = customer ? '/account' : '/sign-in'
 
   // Moving to another page (Back included) closes the mobile menu.
   const [menuPath, setMenuPath] = useState(pathname)
@@ -81,6 +84,7 @@ export function Header() {
             <Link
               href={ACCOUNT_PATH}
               title={accountTitle}
+              data-testid="link-header-account"
               className="flex max-w-40 items-center gap-2 transition-colors hover:text-brand-blue"
             >
               {customer ? (

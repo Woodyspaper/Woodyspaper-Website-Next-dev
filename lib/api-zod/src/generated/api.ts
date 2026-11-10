@@ -8,6 +8,96 @@
 import * as zod from 'zod';
 
 
+export const GetAccountResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "emailVerified": zod.boolean(),
+  "displayName": zod.string(),
+  "activeLightspeedStoreId": zod.string().nullable(),
+  "links": zod.array(zod.object({
+  "id": zod.string(),
+  "provider": zod.string(),
+  "storeId": zod.string(),
+  "linkedEmail": zod.string(),
+  "createdAt": zod.string()
+}))
+})
+
+
+/**
+ * Link using only the authenticated user's verified primary email. No client customer ID is accepted.
+ */
+export const LinkLightspeedAccountResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "emailVerified": zod.boolean(),
+  "displayName": zod.string(),
+  "activeLightspeedStoreId": zod.string().nullable(),
+  "links": zod.array(zod.object({
+  "id": zod.string(),
+  "provider": zod.string(),
+  "storeId": zod.string(),
+  "linkedEmail": zod.string(),
+  "createdAt": zod.string()
+}))
+})
+
+
+export const UnlinkProviderAccountParams = zod.object({
+  "linkId": zod.coerce.string().uuid()
+})
+
+export const UnlinkProviderAccountResponse = zod.void()
+
+
+export const GetAccountPricingResponse = zod.object({
+  "groupName": zod.string(),
+  "taxExempt": zod.boolean(),
+  "note": zod.string(),
+  "offers": zod.array(zod.object({
+  "name": zod.string(),
+  "amount": zod.number(),
+  "discountType": zod.string(),
+  "appliesTo": zod.string(),
+  "minimumSubtotal": zod.number().nullable(),
+  "conditional": zod.boolean()
+}))
+})
+
+
+export const getAccountOrdersQueryOffsetDefault = 0;
+export const getAccountOrdersQueryOffsetMin = 0;
+export const getAccountOrdersQueryOffsetMax = 100000;
+
+export const getAccountOrdersQueryLimitDefault = 10;
+export const getAccountOrdersQueryLimitMax = 50;
+
+
+
+export const GetAccountOrdersQueryParams = zod.object({
+  "offset": zod.coerce.number().int().min(getAccountOrdersQueryOffsetMin).max(getAccountOrdersQueryOffsetMax).default(getAccountOrdersQueryOffsetDefault),
+  "limit": zod.coerce.number().int().min(1).max(getAccountOrdersQueryLimitMax).default(getAccountOrdersQueryLimitDefault)
+})
+
+export const GetAccountOrdersResponse = zod.object({
+  "total": zod.number().int(),
+  "offset": zod.number().int(),
+  "limit": zod.number().int(),
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "createdAt": zod.string(),
+  "total": zod.number(),
+  "paymentStatus": zod.string(),
+  "fulfillmentStatus": zod.string(),
+  "items": zod.array(zod.object({
+  "name": zod.string(),
+  "quantity": zod.number(),
+  "unitPrice": zod.number()
+}))
+}))
+})
+
+
 /**
  * Returns server health status
  * @summary Health check

@@ -5,6 +5,63 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface ProviderAccountLink {
+  id: string;
+  provider: string;
+  storeId: string;
+  linkedEmail: string;
+  createdAt: string;
+}
+
+export interface WoodyAccount {
+  id: string;
+  email: string;
+  emailVerified: boolean;
+  displayName: string;
+  /** @nullable */
+  activeLightspeedStoreId: string | null;
+  links: ProviderAccountLink[];
+}
+
+export interface AccountPricingOffer {
+  name: string;
+  amount: number;
+  discountType: string;
+  appliesTo: string;
+  /** @nullable */
+  minimumSubtotal: number | null;
+  conditional: boolean;
+}
+
+export interface AccountPricing {
+  groupName: string;
+  taxExempt: boolean;
+  note: string;
+  offers: AccountPricingOffer[];
+}
+
+export interface AccountOrderItem {
+  name: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface AccountOrder {
+  id: string;
+  createdAt: string;
+  total: number;
+  paymentStatus: string;
+  fulfillmentStatus: string;
+  items: AccountOrderItem[];
+}
+
+export interface AccountOrderPage {
+  total: number;
+  offset: number;
+  limit: number;
+  items: AccountOrder[];
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -51,6 +108,19 @@ export interface CatalogCategory {
 }
 
 export type CatalogCategories = CatalogCategory[];
+
+export type GetAccountOrdersParams = {
+/**
+ * @minimum 0
+ * @maximum 100000
+ */
+offset?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
+};
 
 export type GetCatalogProductsParams = {
 /**
