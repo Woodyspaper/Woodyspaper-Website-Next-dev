@@ -3,6 +3,7 @@ import { AccountError } from "./errors.ts";
 export type ProviderCustomer = {
   id: number;
   email: string;
+  name?: string;
   customerGroupId?: number;
   customerGroupName?: string;
   taxExempt?: boolean;
@@ -70,14 +71,14 @@ export function matchVerifiedCustomer(items: ProviderCustomer[], total: number, 
 export async function findCustomer(storeId: string, email: string) {
   const data = await providerGet<{ total: number; items: ProviderCustomer[] }>(storeId, "customers", new URLSearchParams({
     email, useExactEmailMatch: "true", limit: "2",
-    responseFields: "total,items(id,email,customerGroupId,customerGroupName,taxExempt)",
+    responseFields: "total,items(id,email,name,customerGroupId,customerGroupName,taxExempt)",
   }), "read_customers");
   return matchVerifiedCustomer(data.items, data.total, email);
 }
 
 export async function getCustomer(storeId: string, id: string) {
   const customer = await providerGet<ProviderCustomer>(storeId, `customers/${encodeURIComponent(id)}`, new URLSearchParams({
-    responseFields: "id,email,customerGroupId,customerGroupName,taxExempt",
+    responseFields: "id,email,name,customerGroupId,customerGroupName,taxExempt",
   }), "read_customers");
   validateCustomer(customer);
   if (String(customer.id) !== id) throw new AccountError(503, "Lightspeed returned a different customer record.");
@@ -89,6 +90,11 @@ export function assertVerifiedLink(customer: ProviderCustomer, linkedEmail: stri
       !verifiedEmails.map(normalizeEmail).includes(normalizeEmail(linkedEmail))) {
     throw new AccountError(409, "The linked email has changed or is no longer verified. Disconnect and link your Lightspeed account again.");
   }
+}
+
+export function linkedDisplayName(customer: ProviderCustomer, linkedEmail: string, verifiedEmails: string[], fallback: string) {
+  assertVerifiedLink(customer, linkedEmail, verifiedEmails);
+  return typeof customer.name === "string" && customer.name.trim() ? customer.name.trim() : fallback;
 }
 
 export function mapOwnedOrders(data: { total: number; items: ProviderOrder[] }, customerId: string, limit: number, offset: number) {

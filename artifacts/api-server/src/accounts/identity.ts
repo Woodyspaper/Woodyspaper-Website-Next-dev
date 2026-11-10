@@ -3,7 +3,8 @@ import type { Request } from "express";
 import { db, websiteAccounts, providerAccountLinks } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { AccountError } from "./errors.ts";
-import { lightspeedStoreId, normalizeEmail } from "./lightspeed-account.ts";
+import { getCustomer, linkedDisplayName, lightspeedStoreId, normalizeEmail } from "./lightspeed-account.ts";
+import { logger } from "../lib/logger";
 
 export type AccountIdentity = {
   accountId: string;
@@ -32,9 +33,22 @@ export async function loadIdentity(req: Request): Promise<AccountIdentity> {
 
 export async function accountResponse(identity: AccountIdentity) {
   const links = await db.select().from(providerAccountLinks).where(eq(providerAccountLinks.accountId, identity.accountId));
+  const storeId = lightspeedStoreId();
+  const activeLink = links.find(link => link.provider === "lightspeed" && link.storeId === storeId);
+  let displayName = identity.displayName;
+  if (activeLink) {
+    try {
+      const customer = await getCustomer(activeLink.storeId, activeLink.customerId);
+      displayName = linkedDisplayName(customer, activeLink.verifiedEmail, identity.verifiedEmails, displayName);
+    } catch (error) {
+      // Provider outages or revoked ownership must not disable the independent website account.
+      if (!(error instanceof AccountError)) throw error;
+      logger.warn("Linked customer name unavailable; using website profile name");
+    }
+  }
   return {
-    id: identity.accountId, email: identity.email, emailVerified: identity.emailVerified, displayName: identity.displayName,
-    activeLightspeedStoreId: lightspeedStoreId(),
+    id: identity.accountId, email: identity.email, emailVerified: identity.emailVerified, displayName,
+    activeLightspeedStoreId: storeId,
     links: links.map(link => ({
       id: link.id, provider: link.provider, storeId: link.storeId,
       linkedEmail: link.verifiedEmail, createdAt: link.createdAt.toISOString(),

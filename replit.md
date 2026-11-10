@@ -24,6 +24,7 @@ Wholesale paper and packaging storefront for South Florida businesses, ported fr
 - API: Express 5, with the catalog endpoint defined in `lib/api-spec/openapi.yaml`
 - Checkout/cart: existing external Lightspeed / Ecwid embed
 - Website accounts: managed Clerk authentication plus stable internal UUIDs in PostgreSQL; optional provider links are stored separately. Linking and unlinking never replaces the website identity.
+- Linked users use their verified Lightspeed customer name as their website display name. Keep the underlying website profile independent; fall back to it when unlinked or when no usable provider name is available.
 - Customers may enter a different Lightspeed email when linking. Verify new addresses by emailed code through Clerk before provider lookup; already verified account addresses need no extra code. Adding an address requires explicit consent that it can also be used for website sign-in. Never change the primary email or merge accounts automatically; unlinking does not remove the verified email.
 - The custom inventory page filters public Lightspeed categories, attributes, and product options before pagination. A complete catalog snapshot is cached for 60 seconds; hidden provider attributes are excluded. Size filtering prefers structured size values and otherwise extracts explicit dimensions from product names, normalizing mixed fractions and decimals. Unavailable size filters are hidden.
 - Supply inquiries: existing FormSubmit endpoint with mailto fallback

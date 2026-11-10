@@ -5,6 +5,7 @@ import type { MouseEvent } from 'react'
 import Link from '@/lib/navigation'
 import { usePathname } from '@/lib/navigation'
 import { useUser } from '@clerk/react'
+import { useGetAccount } from '@workspace/api-client-react'
 import { Logo } from './Logo'
 import { HeaderSearch } from './HeaderSearch'
 import { CategoryBar } from './CategoryBar'
@@ -15,8 +16,8 @@ export function Header() {
   const pathname = usePathname()
   const { isLoaded, isSignedIn, user } = useUser()
   const customer = isLoaded && isSignedIn ? user : null
-  // Signed in to the Woody's Paper website account: first name, else "My Account".
-  const accountLabel = customer ? customer.firstName?.trim() || 'My Account' : 'Sign In'
+  const account = useGetAccount({ query: { enabled: !!customer, staleTime: 30_000 } })
+  const accountLabel = customer ? account.data?.displayName || customer.firstName?.trim() || 'My Account' : 'Sign In'
   const accountEmail = customer?.primaryEmailAddress?.emailAddress
   const accountTitle = customer ? `Your Woody's Paper account${accountEmail ? ` (${accountEmail})` : ''}` : 'Sign in to your Woody\'s Paper account'
   const ACCOUNT_PATH = customer ? '/account' : '/sign-in'
