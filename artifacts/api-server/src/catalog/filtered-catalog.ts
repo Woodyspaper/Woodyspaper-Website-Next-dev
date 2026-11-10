@@ -1,4 +1,5 @@
 import { CatalogNotConfiguredError, LightspeedRequestError, type CatalogProduct } from "./lightspeed.ts";
+import { sizeFromName } from "./product-size.ts";
 
 type RawProduct = {
   id: number; name: string; sku?: string; defaultDisplayedPrice?: number;
@@ -39,6 +40,10 @@ export function buildSnapshot(raw: RawProduct[], categoryList: Category[]): Snap
     }
     for (const option of p.options || []) {
       for (const choice of option.choices || []) if (typeof choice.text === "string") add(option.name, choice.text);
+    }
+    if (!values.size?.length) {
+      const size = sizeFromName(p.name);
+      if (size) add("size", size);
     }
     const categoryIds = new Set<string>();
     for (const id of p.categoryIds || []) {

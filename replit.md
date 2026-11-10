@@ -21,7 +21,7 @@ Wholesale paper and packaging storefront for South Florida businesses, ported fr
 - Frontend: React + Vite, Tailwind CSS v4
 - API: Express 5, with the catalog endpoint defined in `lib/api-spec/openapi.yaml`
 - Store, cart, and customer accounts: existing external Lightspeed / Ecwid embed
-- The custom inventory page filters public Lightspeed categories, attributes, and product options before pagination. A complete catalog snapshot is cached for 60 seconds; hidden provider attributes are excluded. Size filtering appears automatically when structured size values exist in Lightspeed.
+- The custom inventory page filters public Lightspeed categories, attributes, and product options before pagination. A complete catalog snapshot is cached for 60 seconds; hidden provider attributes are excluded. Size filtering prefers structured size values and otherwise extracts explicit dimensions from product names, normalizing mixed fractions and decimals. Unavailable size filters are hidden.
 - Supply inquiries: existing FormSubmit endpoint with mailto fallback
 - The scaffold API/database packages are not used by this frontend-only website.
 

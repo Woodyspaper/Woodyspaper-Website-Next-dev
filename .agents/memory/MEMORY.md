@@ -1,3 +1,3 @@
-- [Catalog filter data](catalog-filter-data.md) — use public structured provider fields; never infer missing dimensions from product names.
+- [Catalog filter data](catalog-filter-data.md) — prefer public structured fields; the user requests explicit name dimensions as a size fallback.
 - [Migration browser testing](migration-browser-testing.md) — the documented testing worker was unavailable; use direct Playwright when that runtime rejects it.
 - [Pushing imported workspace history](github-dev-repo-push.md) — Replit’s imported clone may be shallow; fetch the source history before seeding a separate development repository.
