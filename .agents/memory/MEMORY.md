@@ -1,0 +1,1 @@
+- [Migration browser testing](migration-browser-testing.md) — the documented testing worker was unavailable; use direct Playwright when that runtime rejects it.

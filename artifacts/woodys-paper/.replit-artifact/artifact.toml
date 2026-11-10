@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Woody's Paper"
+description = "Woody's Paper wholesale paper and janitorial supply storefront, with product search, inventory browsing, customer accounts, and inquiries."
+version = "1.0.0"
+id = "artifacts/woodys-paper"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23614
+
+[services.development]
+run = "pnpm --filter @workspace/woodys-paper run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/woodys-paper", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/woodys-paper/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23614"
+BASE_PATH = "/"

@@ -1,44 +1,51 @@
-# [Project name]
+# Woody's Paper
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Wholesale paper and packaging storefront for South Florida businesses, ported from the imported Next.js website without redesigning it.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- Start the managed workflow `artifacts/woodys-paper: web` to run the website.
+- `pnpm --filter @workspace/woodys-paper run typecheck` — check the migrated frontend
+- `pnpm --filter @workspace/woodys-paper test` — browser regression tests against the running workflow; inquiry delivery is intercepted, never sent
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required storefront configuration: `VITE_LIGHTSPEED_STORE_ID`.
+- Optional search suggestions: `VITE_LIGHTSPEED_PUBLIC_TOKEN` (only the read-only `public_` token, never a secret token).
+- These replace the original `NEXT_PUBLIC_LIGHTSPEED_*` settings. Vite embeds them at build time; restart after changing them.
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Frontend: React + Vite, Tailwind CSS v4
+- Store, cart, and customer accounts: existing external Lightspeed / Ecwid embed
+- Supply inquiries: existing FormSubmit endpoint with mailto fallback
+- The scaffold API/database packages are not used by this frontend-only website.
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/woodys-paper/` — migrated website, served at `/`
+- `.migration-backup/` — original imported sources, retained for reference and excluded from deployment
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Keep the imported store and inquiry providers rather than replacing them or introducing a new database.
+- Ecwid mutates page metadata and owns its hash routes. Keep description/social tags outside React ownership so store navigation cannot crash React.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Home page with wholesale supply information, inventory preview, and inquiry form
+- `/inventory` with product browsing/search, cart, and Lightspeed customer account flows when the store ID is configured
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+Preserve the original app; this migration does not add features.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- No storefront ID or public search token was included in the import. Do not invent them or substitute an unrelated store.
+- Do not send real inquiry emails or place orders while testing; intercept third-party requests for those checks.
 
 ## Pointers
 

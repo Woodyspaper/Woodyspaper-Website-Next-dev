@@ -3,3 +3,7 @@
 
 # No need to store the pnpm store twice.
 .local
+
+# Original imported sources are retained for reference, not deployment.
+.migration-backup
+/generated-artifacts/
