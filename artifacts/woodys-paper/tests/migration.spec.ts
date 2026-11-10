@@ -116,12 +116,14 @@ test('catalog products load through the API and search updates the URL', async (
           productUrl: 'https://woodyspaper.com/products/folded-napkin',
         }
     await route.fulfill({
-      json: { items: [product], total: 25, limit: 24, offset: secondPage ? 24 : 0 },
+      json: { items: [product], total: 73, limit: 24, offset: Number(url.searchParams.get('offset') || 0) },
     })
   })
 
   await page.goto('/inventory')
   await expect(page.getByRole('heading', { name: 'Folded napkin' })).toBeVisible()
+  await expect(page.getByText('Page 1 of 4', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'First', exact: true })).toBeDisabled()
   await expect(page.getByText('SKU: NAP-01')).toBeVisible()
   await expect(page.getByRole('link', { name: 'View and order' })).toHaveAttribute(
     'href',
@@ -134,4 +136,13 @@ test('catalog products load through the API and search updates the URL', async (
   await expect(page.getByRole('heading', { name: 'Paper towel roll' })).toBeVisible()
   expect(requests.some(url => url.searchParams.get('q') === 'napkin')).toBe(true)
   expect(requests.some(url => url.searchParams.get('offset') === '24')).toBe(true)
+  await expect(page.getByText('Page 2 of 4', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Last', exact: true }).click()
+  await expect(page.getByText('Page 4 of 4', { exact: true })).toBeVisible()
+  await expect(page).toHaveURL(/q=napkin&offset=72/)
+  await expect(page.getByRole('button', { name: 'Next', exact: true })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Last', exact: true })).toBeDisabled()
+  await page.getByRole('button', { name: 'First', exact: true }).click()
+  await expect(page.getByText('Page 1 of 4', { exact: true })).toBeVisible()
+  await expect(page).toHaveURL(/q=napkin$/)
 })

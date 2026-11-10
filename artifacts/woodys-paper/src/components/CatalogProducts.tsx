@@ -57,6 +57,9 @@ export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsP
         ? error.message
         : 'The product catalog could not be loaded.'
   const currentOffset = data?.offset ?? offset
+  const pageSize = data?.limit ?? PAGE_SIZE
+  const totalPages = Math.max(1, Math.ceil((data?.total ?? 0) / pageSize))
+  const lastOffset = (totalPages - 1) * pageSize
   const hasPrevious = currentOffset > 0
   const hasNext = Boolean(data && currentOffset + data.limit < data.total)
 
@@ -154,7 +157,15 @@ export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsP
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:gap-6">
             {data.items.map((product) => <ProductCard key={product.id} product={product} />)}
           </div>
-          <nav aria-label="Product pages" className="flex items-center justify-center gap-4">
+          <nav aria-label="Product pages" className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
+            <button
+              type="button"
+              disabled={!hasPrevious || isFetching}
+              onClick={() => navigate(submittedQuery, filters, 0)}
+              className="rounded-full border border-brand-blue/30 px-4 py-2.5 font-semibold text-brand-blue transition hover:bg-brand-mist disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              First
+            </button>
             <button
               type="button"
               disabled={!hasPrevious || isFetching}
@@ -164,7 +175,7 @@ export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsP
               Previous
             </button>
             <span className="text-sm text-slate-600">
-              Page {Math.floor(currentOffset / PAGE_SIZE) + 1}
+              Page {Math.floor(currentOffset / pageSize) + 1} of {totalPages}
             </span>
             <button
               type="button"
@@ -173,6 +184,14 @@ export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsP
               className="rounded-full border border-brand-blue/30 px-5 py-2.5 font-semibold text-brand-blue transition hover:bg-brand-mist disabled:cursor-not-allowed disabled:opacity-40"
             >
               Next
+            </button>
+            <button
+              type="button"
+              disabled={!hasNext || isFetching}
+              onClick={() => navigate(submittedQuery, filters, lastOffset)}
+              className="rounded-full border border-brand-blue/30 px-4 py-2.5 font-semibold text-brand-blue transition hover:bg-brand-mist disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Last
             </button>
           </nav>
         </>
