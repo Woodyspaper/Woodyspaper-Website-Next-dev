@@ -8,6 +8,7 @@ import { useUser } from '@clerk/react'
 import { Logo } from './Logo'
 import { HeaderSearch } from './HeaderSearch'
 import { CategoryBar } from './CategoryBar'
+import { AccountMenu } from './AccountMenu'
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -81,19 +82,13 @@ export function Header() {
               Supply Inquiry
             </Link>
             */}
-            <Link
-              href={ACCOUNT_PATH}
-              title={accountTitle}
-              data-testid="link-header-account"
-              className="flex max-w-40 items-center gap-2 transition-colors hover:text-brand-blue"
-            >
-              {customer ? (
-                <svg viewBox="0 0 20 20" fill="currentColor" className="size-4 shrink-0 text-brand-blue" aria-hidden="true">
-                  <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0H3z" />
-                </svg>
-              ) : null}
-              <span className="truncate">{accountLabel}</span>
-            </Link>
+            {customer ? (
+              <AccountMenu key={customer.id} label={accountLabel} email={accountEmail} onNavigate={close} />
+            ) : (
+              <Link href={ACCOUNT_PATH} title={accountTitle} data-testid="link-header-account" className="transition-colors hover:text-brand-blue">
+                Sign In
+              </Link>
+            )}
           </nav>
 
           <button
@@ -118,14 +113,11 @@ export function Header() {
         hidden={!menuOpen}
         className="fixed inset-x-0 top-chrome z-40 flex flex-col gap-6 border-b border-slate-200 bg-white/98 px-6 py-8 text-center text-lg font-semibold text-slate-700 shadow-lift backdrop-blur-xl lg:hidden"
       >
-        <Link href={ACCOUNT_PATH} onClick={close} title={accountTitle} className="inline-flex items-center justify-center gap-2">
-          {customer ? (
-            <svg viewBox="0 0 20 20" fill="currentColor" className="size-4 shrink-0 text-brand-blue" aria-hidden="true">
-              <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0H3z" />
-            </svg>
-          ) : null}
-          {accountLabel}
-        </Link>
+        {customer && menuOpen ? (
+          <div className="flex justify-center"><AccountMenu key={customer.id} label={accountLabel} email={accountEmail} onNavigate={close} mobile /></div>
+        ) : (
+          <Link href={ACCOUNT_PATH} onClick={close} title={accountTitle} className="inline-flex items-center justify-center gap-2">{accountLabel}</Link>
+        )}
         {/* Supply Inquiry temporarily hidden.
         <Link href="/#contact" onClick={goToContact}>Direct Inquiry</Link>
         */}
