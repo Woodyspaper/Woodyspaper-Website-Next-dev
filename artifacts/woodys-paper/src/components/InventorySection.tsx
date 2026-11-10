@@ -1,4 +1,5 @@
 import { AccountPrompt } from './AccountPrompt'
+import { CatalogProducts } from './CatalogProducts'
 import { LightSpeedStore } from './LightSpeedStore'
 import { Reveal } from './Reveal'
 
@@ -21,22 +22,40 @@ export function InventorySection({ initialQuery = '', openAccount = false, hubPa
           <AccountPrompt />
         </div>
 
-        {/*
-          Store layout lives here. Remove any line to fall back to the setting
-          in Lightspeed admin → Design. Options are typed — hover a key for
-          its allowed values. Columns per row come from card size in admin.
-        */}
-        <LightSpeedStore
-          productsPerPage={30}
-          initialQuery={initialQuery}
-          openAccount={openAccount}
-          hubPath={hubPath}
-          defaultCategoryId={0}
-          design={{
-            productListCardSpacingType: 'wide', // Ecwid's default; 'medium' | 'narrow' fit more per row
-            product_list_category_title_behavior: 'SHOW_BELOW_IMAGE', // title on the card, styled in index.css
-          }}
-        />
+        {openAccount ? (
+          <LightSpeedStore
+            productsPerPage={30}
+            initialQuery={initialQuery}
+            openAccount
+            defaultCategoryId={0}
+            design={{
+              productListCardSpacingType: 'wide',
+              product_list_category_title_behavior: 'SHOW_BELOW_IMAGE',
+            }}
+          />
+        ) : (
+          <>
+            <CatalogProducts initialQuery={initialQuery} hubPath={hubPath} />
+            <details className="mx-auto mt-12 max-w-4xl rounded-panel border border-slate-200 bg-white p-5 shadow-glass">
+              <summary className="cursor-pointer font-semibold text-brand-blue">
+                Open the existing Lightspeed store
+              </summary>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                Use the current store for shopping cart, checkout, and customer account features.
+                Product cards above link to the provider’s product pages.
+              </p>
+              <LightSpeedStore
+                productsPerPage={30}
+                showSearch={false}
+                defaultCategoryId={0}
+                design={{
+                  productListCardSpacingType: 'wide',
+                  product_list_category_title_behavior: 'SHOW_BELOW_IMAGE',
+                }}
+              />
+            </details>
+          </>
+        )}
       </div>
     </Reveal>
   )

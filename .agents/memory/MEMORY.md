@@ -1,1 +1,2 @@
 - [Migration browser testing](migration-browser-testing.md) — the documented testing worker was unavailable; use direct Playwright when that runtime rejects it.
+- [Pushing imported workspace history](github-dev-repo-push.md) — Replit’s imported clone may be shallow; fetch the source history before seeding a separate development repository.
