@@ -40,7 +40,7 @@ Wholesale paper and packaging storefront for South Florida businesses, ported fr
 
 ## Product
 
-- Home page with wholesale supply information, inventory preview, and inquiry form
+- Home page with wholesale supply information and inquiry form; keep product browsing on `/inventory`. Global header search and the category navigation bar lead to inventory results.
 - `/inventory` with API-backed product browsing, basic search and pagination; existing provider storefront remains available for checkout and customer accounts
 
 ## User preferences

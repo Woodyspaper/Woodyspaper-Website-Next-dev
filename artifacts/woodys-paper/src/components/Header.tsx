@@ -6,6 +6,8 @@ import Link from '@/lib/navigation'
 import { usePathname } from '@/lib/navigation'
 import { ACCOUNT_PATH, useStoreCustomer } from '@/services/storeCustomer'
 import { Logo } from './Logo'
+import { HeaderSearch } from './HeaderSearch'
+import { CategoryBar } from './CategoryBar'
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -60,10 +62,12 @@ export function Header() {
   return (
     <>
       <header onClickCapture={closeOnLinkClick} className="fixed inset-x-0 top-utility z-50 h-header border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-lg lg:h-header-lg">
-        <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4">
-          <Logo className="h-14 lg:h-16" />
+        <div className="mx-auto flex h-full max-w-7xl flex-wrap content-center items-center justify-between gap-x-8 px-4 lg:flex-nowrap">
+          <Logo className="h-14 shrink-0 lg:h-16" />
 
-          <nav aria-label="Primary" className="hidden items-center gap-10 font-semibold text-slate-600 lg:flex">
+          <HeaderSearch className="order-last w-full pb-2 lg:order-none lg:w-auto lg:max-w-xl lg:flex-1 lg:pb-0" />
+
+          <nav aria-label="Primary" className="hidden items-center shrink-0 gap-8 font-semibold text-slate-600 lg:flex">
             <Link
               href="/#contact"
               onClick={goToContact}
@@ -106,6 +110,8 @@ export function Header() {
           </button>
         </div>
       </header>
+
+      <CategoryBar />
 
       <div
         id="mobile-menu"

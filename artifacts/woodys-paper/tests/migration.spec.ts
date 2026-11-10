@@ -5,6 +5,30 @@ test.beforeEach(async ({ page }) => {
   await page.route('https://app.business.shop/script.js**', route => route.abort())
 })
 
+for (const width of [1280, 390]) {
+  test(`header search and categories navigate from a catalog-free home at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.route('**/api/catalog/categories', route => route.fulfill({
+      json: [{ id: 123, name: 'PAPER' }, { id: 456, name: 'ENVELOPES' }],
+    }))
+    await page.goto('/')
+    await expect(page.locator('main').getByRole('heading', { name: 'Inventory', exact: true })).toHaveCount(0)
+    await expect(page.locator('main').getByLabel('Search products', { exact: true })).toHaveCount(0)
+    const search = page.getByRole('search', { name: 'Header product search' })
+    await search.getByRole('searchbox', { name: 'Search catalog', exact: true }).fill('napkin')
+    await search.getByRole('button', { name: 'Search catalog', exact: true }).click()
+    await expect(page).toHaveURL(/\/inventory\?q=napkin$/)
+    await page.getByTestId('button-all-categories').click()
+    await page.locator('#category-panel').getByRole('link', { name: 'Paper', exact: true }).click()
+    await expect(page).toHaveURL(/\/inventory\?filter.category=123$/)
+    await expect(page.getByTestId('button-all-categories')).toHaveAttribute('aria-expanded', 'false')
+    await search.getByRole('searchbox', { name: 'Search catalog', exact: true }).fill('white')
+    await search.getByRole('button', { name: 'Search catalog', exact: true }).click()
+    await expect(page).toHaveURL(/filter.category=123&q=white/)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  })
+}
+
 test('home, inventory, history and inquiry preserve the imported flows', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', error => errors.push(error.message))
