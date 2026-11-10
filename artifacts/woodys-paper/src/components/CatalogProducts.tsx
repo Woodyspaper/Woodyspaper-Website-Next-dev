@@ -161,21 +161,30 @@ export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsP
             <button
               type="button"
               disabled={!hasPrevious || isFetching}
-              onClick={() => navigate(submittedQuery, filters, 0)}
-              className="rounded-full border border-brand-blue/30 px-4 py-2.5 font-semibold text-brand-blue transition hover:bg-brand-mist disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              First
-            </button>
-            <button
-              type="button"
-              disabled={!hasPrevious || isFetching}
               onClick={() => navigate(submittedQuery, filters, Math.max(0, currentOffset - PAGE_SIZE))}
               className="rounded-full border border-brand-blue/30 px-5 py-2.5 font-semibold text-brand-blue transition hover:bg-brand-mist disabled:cursor-not-allowed disabled:opacity-40"
             >
               Previous
             </button>
             <span className="text-sm text-slate-600">
-              Page {Math.floor(currentOffset / pageSize) + 1} of {totalPages}
+              Page{' '}
+              <button
+                type="button"
+                aria-label="First"
+                title="Go to first page"
+                disabled={!hasPrevious || isFetching}
+                onClick={() => navigate(submittedQuery, filters, 0)}
+                className="rounded px-1 py-2 font-semibold text-brand-blue underline underline-offset-4 hover:text-brand-blue-dark focus-visible:outline-2 focus-visible:outline-brand-blue disabled:cursor-default disabled:no-underline"
+              >{Math.floor(currentOffset / pageSize) + 1}</button>
+              {' '}of{' '}
+              <button
+                type="button"
+                aria-label="Last"
+                title="Go to last page"
+                disabled={!hasNext || isFetching}
+                onClick={() => navigate(submittedQuery, filters, lastOffset)}
+                className="rounded px-1 py-2 font-semibold text-brand-blue underline underline-offset-4 hover:text-brand-blue-dark focus-visible:outline-2 focus-visible:outline-brand-blue disabled:cursor-default disabled:no-underline"
+              >{totalPages}</button>
             </span>
             <button
               type="button"
@@ -184,14 +193,6 @@ export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsP
               className="rounded-full border border-brand-blue/30 px-5 py-2.5 font-semibold text-brand-blue transition hover:bg-brand-mist disabled:cursor-not-allowed disabled:opacity-40"
             >
               Next
-            </button>
-            <button
-              type="button"
-              disabled={!hasNext || isFetching}
-              onClick={() => navigate(submittedQuery, filters, lastOffset)}
-              className="rounded-full border border-brand-blue/30 px-4 py-2.5 font-semibold text-brand-blue transition hover:bg-brand-mist disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Last
             </button>
           </nav>
         </>
