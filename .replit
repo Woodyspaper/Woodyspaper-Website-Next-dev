@@ -53,3 +53,8 @@ expertMode = true
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
+
+[userenv]
+
+[userenv.development]
+VITE_LIGHTSPEED_STORE_ID = "142871790"
