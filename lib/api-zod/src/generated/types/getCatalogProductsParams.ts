@@ -8,6 +8,11 @@
 
 export type GetCatalogProductsParams = {
 /**
+ * JSON object mapping facet keys to selected values
+ * @maxLength 4000
+ */
+filters?: string;
+/**
  * @maxLength 100
  */
 q?: string;

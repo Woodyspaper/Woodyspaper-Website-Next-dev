@@ -20,6 +20,8 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary List products from the configured catalog provider
  */
+export const getCatalogProductsQueryFiltersMax = 4000;
+
 export const getCatalogProductsQueryQMax = 100;
 
 export const getCatalogProductsQueryLimitDefault = 24;
@@ -31,12 +33,22 @@ export const getCatalogProductsQueryOffsetMin = 0;
 
 
 export const GetCatalogProductsQueryParams = zod.object({
+  "filters": zod.coerce.string().max(getCatalogProductsQueryFiltersMax).optional().describe('JSON object mapping facet keys to selected values'),
   "q": zod.coerce.string().max(getCatalogProductsQueryQMax).optional(),
   "limit": zod.coerce.number().int().min(1).max(getCatalogProductsQueryLimitMax).default(getCatalogProductsQueryLimitDefault),
   "offset": zod.coerce.number().int().min(getCatalogProductsQueryOffsetMin).default(getCatalogProductsQueryOffsetDefault)
 })
 
 export const GetCatalogProductsResponse = zod.object({
+  "facets": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "options": zod.array(zod.object({
+  "value": zod.string(),
+  "label": zod.string(),
+  "count": zod.number().int()
+}))
+})),
   "items": zod.array(zod.object({
   "id": zod.number().int(),
   "name": zod.string(),

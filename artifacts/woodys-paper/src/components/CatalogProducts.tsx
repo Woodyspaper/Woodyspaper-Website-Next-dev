@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useGetCatalogProducts } from '@workspace/api-client-react'
 import type { CatalogProduct } from '@workspace/api-client-react'
-import { useRouter } from '@/lib/navigation'
+import { useRouter, useSearchParams } from '@/lib/navigation'
 
 const PAGE_SIZE = 24
 const PLACEHOLDER_IMAGE = '/product-placeholder.webp'
@@ -13,32 +13,37 @@ type CatalogProductsProps = {
 
 export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsProps) {
   const router = useRouter()
-  const [search, setSearch] = useState(initialQuery)
-  const [submittedQuery, setSubmittedQuery] = useState(initialQuery)
-  const [offset, setOffset] = useState(0)
+  const params = useSearchParams()
+  const submittedQuery = params.get('q') || initialQuery
+  const rawOffset = Number(params.get('offset') || 0)
+  const offset = Number.isSafeInteger(rawOffset) && rawOffset >= 0 ? rawOffset : 0
+  const filters = Object.fromEntries([...params.entries()]
+    .filter(([key, value]) => key.startsWith('filter.') && value)
+    .map(([key, value]) => [key.slice(7), value]))
+  const [search, setSearch] = useState(submittedQuery)
 
   useEffect(() => {
-    setSearch(initialQuery)
-    setSubmittedQuery(initialQuery)
-    setOffset(0)
-  }, [initialQuery])
+    setSearch(submittedQuery)
+  }, [submittedQuery])
+
+  const navigate = (query: string, selected: Record<string, string>, nextOffset = 0) => {
+    const next = new URLSearchParams()
+    if (query) next.set('q', query)
+    for (const [key, value] of Object.entries(selected)) if (value) next.set(`filter.${key}`, value)
+    if (nextOffset) next.set('offset', String(nextOffset))
+    const path = hubPath || window.location.pathname
+    router.push(`${path}${next.size ? `?${next}` : ''}`)
+  }
 
   const { data, error, isLoading, isFetching } = useGetCatalogProducts(
-    { q: submittedQuery || undefined, limit: PAGE_SIZE, offset },
+    { q: submittedQuery || undefined, filters: Object.keys(filters).length ? JSON.stringify(filters) : undefined, limit: PAGE_SIZE, offset },
     { query: { staleTime: 30_000 } },
   )
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const query = search.trim().slice(0, 100)
-    setOffset(0)
-    setSubmittedQuery(query)
-
-    if (hubPath) {
-      router.push(`${hubPath}${query ? `?q=${encodeURIComponent(query)}` : ''}`)
-    } else {
-      router.replace(`${window.location.pathname}${query ? `?q=${encodeURIComponent(query)}` : ''}`)
-    }
+    navigate(query, filters)
   }
 
   const errorData = error && typeof error === 'object' && 'data' in error
@@ -76,6 +81,59 @@ export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsP
         </button>
       </form>
 
+      <section aria-label="Product filters" className="rounded-panel border border-slate-200 bg-white p-5 shadow-glass">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h3 className="font-semibold text-ink">Filter products</h3>
+          {Object.keys(filters).length > 0 ? (
+            <button type="button" onClick={() => navigate(submittedQuery, {})}
+              className="text-sm font-semibold text-brand-blue underline underline-offset-4">Clear all filters</button>
+          ) : null}
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {data && !data.facets?.some(facet => facet.key === 'size') ? (
+            <label className="flex min-w-0 flex-col gap-1.5 text-sm font-semibold text-slate-500">
+              Size
+              <select aria-label="Size" disabled className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 font-normal">
+                <option>No size data for these products</option>
+              </select>
+            </label>
+          ) : null}
+          {(data?.facets || []).map(facet => (
+            <label key={facet.key} className="flex min-w-0 flex-col gap-1.5 text-sm font-semibold text-ink">
+              {facet.label}
+              <select aria-label={facet.label} value={filters[facet.key] || ''}
+                onChange={event => {
+                  const selected = { ...filters }
+                  if (event.target.value) selected[facet.key] = event.target.value
+                  else delete selected[facet.key]
+                  navigate(submittedQuery, selected)
+                }}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 font-normal outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20">
+                <option value="">All {facet.label.toLowerCase()}</option>
+                {facet.options.map(option => (
+                  <option key={option.value} value={option.value}>{option.label} ({option.count})</option>
+                ))}
+              </select>
+            </label>
+          ))}
+        </div>
+        {isFetching ? <p role="status" className="mt-3 text-sm text-slate-500">Updating filters and products…</p> : null}
+        {!isFetching && !error && !data?.facets?.length ? <p className="text-sm text-slate-500">No filter values are available for this search.</p> : null}
+        {Object.keys(filters).length > 0 ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {Object.entries(filters).map(([key, value]) => {
+              const facet = data?.facets?.find(f => f.key === key)
+              const label = facet?.options.find(o => o.value === value)?.label || value
+              return <button key={key} type="button" aria-label={`Remove ${facet?.label || key} filter`}
+                onClick={() => { const selected = { ...filters }; delete selected[key]; navigate(submittedQuery, selected) }}
+                className="rounded-full bg-brand-mist px-3 py-1.5 text-sm text-brand-blue">
+                {facet?.label || key}: {label} <span aria-hidden="true">×</span>
+              </button>
+            })}
+          </div>
+        ) : null}
+      </section>
+
       {isLoading ? (
         <p className="py-12 text-center text-slate-600" role="status">Loading products…</p>
       ) : error ? (
@@ -85,7 +143,7 @@ export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsP
         </div>
       ) : !data?.items.length ? (
         <p className="rounded-panel border border-slate-200 bg-white p-10 text-center text-slate-600">
-          {submittedQuery ? `No products found for “${submittedQuery}”.` : 'No products are available right now.'}
+          {Object.keys(filters).length ? 'No products match these filters. Remove a filter or clear all filters to try again.' : submittedQuery ? `No products found for “${submittedQuery}”.` : 'No products are available right now.'}
         </p>
       ) : (
         <>
@@ -100,7 +158,7 @@ export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsP
             <button
               type="button"
               disabled={!hasPrevious || isFetching}
-              onClick={() => setOffset(Math.max(0, currentOffset - PAGE_SIZE))}
+              onClick={() => navigate(submittedQuery, filters, Math.max(0, currentOffset - PAGE_SIZE))}
               className="rounded-full border border-brand-blue/30 px-5 py-2.5 font-semibold text-brand-blue transition hover:bg-brand-mist disabled:cursor-not-allowed disabled:opacity-40"
             >
               Previous
@@ -111,7 +169,7 @@ export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsP
             <button
               type="button"
               disabled={!hasNext || isFetching}
-              onClick={() => setOffset(currentOffset + PAGE_SIZE)}
+              onClick={() => navigate(submittedQuery, filters, currentOffset + PAGE_SIZE)}
               className="rounded-full border border-brand-blue/30 px-5 py-2.5 font-semibold text-brand-blue transition hover:bg-brand-mist disabled:cursor-not-allowed disabled:opacity-40"
             >
               Next

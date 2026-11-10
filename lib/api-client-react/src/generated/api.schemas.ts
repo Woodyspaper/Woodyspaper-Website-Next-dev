@@ -25,7 +25,20 @@ export interface CatalogProduct {
   productUrl: string | null;
 }
 
+export interface CatalogFacetOption {
+  value: string;
+  label: string;
+  count: number;
+}
+
+export interface CatalogFacet {
+  key: string;
+  label: string;
+  options: CatalogFacetOption[];
+}
+
 export interface CatalogProductPage {
+  facets: CatalogFacet[];
   items: CatalogProduct[];
   total: number;
   limit: number;
@@ -33,6 +46,11 @@ export interface CatalogProductPage {
 }
 
 export type GetCatalogProductsParams = {
+/**
+ * JSON object mapping facet keys to selected values
+ * @maxLength 4000
+ */
+filters?: string;
 /**
  * @maxLength 100
  */

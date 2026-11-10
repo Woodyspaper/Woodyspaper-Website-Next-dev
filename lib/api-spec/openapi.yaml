@@ -32,6 +32,13 @@ paths:
       tags: [catalog]
       summary: List products from the configured catalog provider
       parameters:
+        - name: filters
+          in: query
+          required: false
+          description: JSON object mapping facet keys to selected values
+          schema:
+            type: string
+            maxLength: 4000
         - name: q
           in: query
           required: false
@@ -106,6 +113,10 @@ components:
     CatalogProductPage:
       type: object
       properties:
+        facets:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogFacet"
         items:
           type: array
           items:
@@ -121,4 +132,27 @@ components:
         - total
         - limit
         - offset
+        - facets
+    CatalogFacet:
+      type: object
+      required: [key, label, options]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogFacetOption"
+    CatalogFacetOption:
+      type: object
+      required: [value, label, count]
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+        count:
+          type: integer
 

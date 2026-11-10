@@ -1,9 +1,9 @@
 import { GetCatalogProductsQueryParams } from "@workspace/api-zod";
 import { GetCatalogProductsResponse } from "@workspace/api-zod";
 import { Router, type IRouter } from "express";
+import { getFilteredCatalog } from "../catalog/filtered-catalog";
 import {
   CatalogNotConfiguredError,
-  getLightspeedProducts,
   LightspeedRequestError,
 } from "../catalog/lightspeed";
 
@@ -16,12 +16,18 @@ router.get("/catalog/products", async (req, res) => {
     return;
   }
 
+  let filters: Record<string, string> = {};
   try {
-    const page = await getLightspeedProducts({
-      query: query.data.q,
-      limit: query.data.limit,
-      offset: query.data.offset,
-    });
+    const parsed: unknown = JSON.parse(query.data.filters || "{}");
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) ||
+        Object.keys(parsed).length > 30 || Object.values(parsed).some(v => typeof v !== "string" || !v || v.length > 200)) throw new Error();
+    filters = parsed as Record<string, string>;
+  } catch {
+    res.status(400).json({ error: "The catalog filters are invalid." });
+    return;
+  }
+  try {
+    const page = await getFilteredCatalog(query.data.q, filters, query.data.limit, query.data.offset);
     res.json(GetCatalogProductsResponse.parse(page));
   } catch (error) {
     if (error instanceof CatalogNotConfiguredError) {

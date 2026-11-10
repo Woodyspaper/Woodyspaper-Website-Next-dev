@@ -5,9 +5,11 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { CatalogFacet } from './catalogFacet';
 import type { CatalogProduct } from './catalogProduct';
 
 export interface CatalogProductPage {
+  facets: CatalogFacet[];
   items: CatalogProduct[];
   total: number;
   limit: number;

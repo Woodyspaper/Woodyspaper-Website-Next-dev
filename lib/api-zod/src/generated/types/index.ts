@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './catalogFacet';
+export * from './catalogFacetOption';
 export * from './catalogProduct';
 export * from './catalogProductPage';
 export * from './getCatalogProductsParams';

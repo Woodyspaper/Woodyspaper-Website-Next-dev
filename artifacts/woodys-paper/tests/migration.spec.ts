@@ -1,3 +1,28 @@
+test('catalog filters combine, survive reload, and clear', async ({ page }) => {
+  await page.route('**/api/catalog/products**', async route => {
+    const url = new URL(route.request().url())
+    const selected = JSON.parse(url.searchParams.get('filters') || '{}')
+    await route.fulfill({ json: {
+      items: [{ id: 1, name: 'Filtered paper', sku: null, price: 10, priceFormatted: '$10',
+        inStock: true, imageUrl: null, productUrl: null }],
+      total: Object.keys(selected).length ? 1 : 30, limit: 24, offset: Number(url.searchParams.get('offset') || 0),
+      facets: [
+        { key: 'category', label: 'Category', options: [{ value: 'paper', label: 'Paper', count: 1 }] },
+        { key: 'brand', label: 'Brand', options: [{ value: 'Acme', label: 'Acme', count: 1 }] },
+      ],
+    } })
+  })
+  await page.goto('/inventory')
+  await page.getByLabel('Category', { exact: true }).selectOption('paper')
+  await page.getByLabel('Brand', { exact: true }).selectOption('Acme')
+  await expect(page).toHaveURL(/filter.category=paper.*filter.brand=Acme/)
+  await page.reload()
+  await expect(page.getByLabel('Category', { exact: true })).toHaveValue('paper')
+  await expect(page.getByLabel('Brand', { exact: true })).toHaveValue('Acme')
+  await page.getByRole('button', { name: 'Clear all filters' }).click()
+  await expect(page).toHaveURL(/\/inventory$/)
+  await expect(page.getByLabel('Brand', { exact: true })).toHaveValue('')
+})
 import { test, expect } from '@playwright/test'
 
 test('home, inventory, history and inquiry preserve the imported flows', async ({ page }) => {
