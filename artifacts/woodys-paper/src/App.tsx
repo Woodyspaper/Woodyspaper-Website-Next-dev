@@ -102,19 +102,6 @@ function ClerkQueryClientCacheInvalidator() {
   return null
 }
 
-function HomeRedirect() {
-  return (
-    <>
-      <Show when="signed-in">
-        <Redirect to="/account" />
-      </Show>
-      <Show when="signed-out">
-        <HomePage />
-      </Show>
-    </>
-  )
-}
-
 function Protected({ children }: { children: ReactNode }) {
   return (
     <>
@@ -130,7 +117,7 @@ function Routes() {
   return (
     <RoutedErrorBoundary>
       <Switch>
-        <Route path="/" component={HomeRedirect} />
+        <Route path="/" component={HomePage} />
         <Route path="/inventory" component={InventoryPage} />
         <Route path="/sign-in/*?" component={SignInPage} />
         <Route path="/sign-up/*?" component={SignUpPage} />
