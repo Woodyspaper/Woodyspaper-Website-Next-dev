@@ -160,11 +160,13 @@ export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsP
           <nav aria-label="Product pages" className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
             <button
               type="button"
+              aria-label="Previous"
+              title="Previous page"
               disabled={!hasPrevious || isFetching}
               onClick={() => navigate(submittedQuery, filters, Math.max(0, currentOffset - PAGE_SIZE))}
               className="rounded-full border border-brand-blue/30 px-5 py-2.5 font-semibold text-brand-blue transition hover:bg-brand-mist disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Previous
+              <span aria-hidden="true">←</span>
             </button>
             <span className="text-sm text-slate-600">
               Page{' '}
@@ -188,11 +190,13 @@ export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsP
             </span>
             <button
               type="button"
+              aria-label="Next"
+              title="Next page"
               disabled={!hasNext || isFetching}
               onClick={() => navigate(submittedQuery, filters, currentOffset + PAGE_SIZE)}
               className="rounded-full border border-brand-blue/30 px-5 py-2.5 font-semibold text-brand-blue transition hover:bg-brand-mist disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Next
+              <span aria-hidden="true">→</span>
             </button>
           </nav>
         </>
