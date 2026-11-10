@@ -22,7 +22,10 @@ const labelFor = (key: string) => key === "unit" ? "Unit of measure" : key.repla
 export function buildSnapshot(raw: RawProduct[], categoryList: Category[]): Snapshot {
   const categories = new Map(categoryList.filter(c => c.enabled !== false).map(c => [String(c.id), c.name]));
   const parents = new Map(categoryList.map(c => [String(c.id), c.parentId ? String(c.parentId) : undefined]));
-  const labels = new Map<string, string>([["category", "Category"]]);
+  const labels = new Map<string, string>([
+    ["category", "Category"],
+    ["availability", "Availability"],
+  ]);
   const products = raw.map(p => {
     const values: Record<string, string[]> = {};
     const add = (name: string, value: string) => {
@@ -48,6 +51,9 @@ export function buildSnapshot(raw: RawProduct[], categoryList: Category[]): Snap
       }
     }
     values.category = [...categoryIds];
+    if (typeof p.inStock === "boolean") {
+      values.availability = [p.inStock ? "in-stock" : "out-of-stock"];
+    }
     return { values, product: {
       id: p.id, name: p.name, sku: p.sku || null,
       price: p.defaultDisplayedPrice ?? null, priceFormatted: p.defaultDisplayedPriceFormatted || null,
@@ -58,22 +64,41 @@ export function buildSnapshot(raw: RawProduct[], categoryList: Category[]): Snap
   return { products, labels, categories };
 }
 
-export function filterSnapshot(snapshot: Snapshot, query: string | undefined, filters: Record<string, string>, limit: number, offset: number) {
+export function filterSnapshot(
+  snapshot: Snapshot,
+  query: string | undefined,
+  filters: Record<string, string>,
+  limit: number,
+  offset: number,
+  priceRange: { minPrice?: number; maxPrice?: number } = {},
+) {
   const words = (query || "").trim().toLowerCase().split(/\s+/).filter(Boolean);
   const searched = snapshot.products.filter(p => words.every(word =>
     `${p.product.name} ${p.product.sku || ""}`.toLowerCase().includes(word)));
   const matches = (p: IndexedProduct, except?: string) => Object.entries(filters).every(([key, value]) =>
     key === except || p.values[key]?.includes(value));
-  const filtered = searched.filter(p => matches(p));
-  const priority = ["category", "brand", "size", "color", "finish"];
+  const matchesPrice = (p: IndexedProduct) => {
+    if (priceRange.minPrice === undefined && priceRange.maxPrice === undefined) return true;
+    if (p.product.price === null) return false;
+    return (priceRange.minPrice === undefined || p.product.price >= priceRange.minPrice) &&
+      (priceRange.maxPrice === undefined || p.product.price <= priceRange.maxPrice);
+  };
+  const filtered = searched.filter(p => matches(p) && matchesPrice(p));
+  const priority = ["category", "availability", "brand", "size", "color", "finish"];
   const facets = [...snapshot.labels].map(([key, label]) => {
     const counts = new Map<string, number>();
-    for (const p of searched) if (matches(p, key)) {
+    for (const p of searched) if (matches(p, key) && matchesPrice(p)) {
       for (const value of p.values[key] || []) counts.set(value, (counts.get(value) || 0) + 1);
     }
     if (filters[key] && !counts.has(filters[key])) counts.set(filters[key], 0);
     return { key, label, options: [...counts].map(([value, count]) => ({
-      value, label: key === "category" ? snapshot.categories.get(value) || value : value, count,
+      value,
+      label: key === "category"
+        ? snapshot.categories.get(value) || value
+        : key === "availability"
+          ? value === "in-stock" ? "In stock" : "Out of stock"
+          : value,
+      count,
     })).sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true })) };
   }).filter(f => f.options.length).sort((a, b) =>
     (priority.includes(a.key) ? priority.indexOf(a.key) : 99) -
@@ -122,6 +147,12 @@ async function loadSnapshot(): Promise<Snapshot> {
   try { return await promise; } finally { if (pending?.promise === promise) pending = undefined; }
 }
 
-export async function getFilteredCatalog(query: string | undefined, filters: Record<string, string>, limit: number, offset: number) {
-  return filterSnapshot(await loadSnapshot(), query, filters, limit, offset);
+export async function getFilteredCatalog(
+  query: string | undefined,
+  filters: Record<string, string>,
+  limit: number,
+  offset: number,
+  priceRange: { minPrice?: number; maxPrice?: number } = {},
+) {
+  return filterSnapshot(await loadSnapshot(), query, filters, limit, offset, priceRange);
 }

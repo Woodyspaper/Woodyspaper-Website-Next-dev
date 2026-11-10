@@ -24,6 +24,10 @@ export const getCatalogProductsQueryFiltersMax = 4000;
 
 export const getCatalogProductsQueryQMax = 100;
 
+export const getCatalogProductsQueryMinPriceMin = 0;
+
+export const getCatalogProductsQueryMaxPriceMin = 0;
+
 export const getCatalogProductsQueryLimitDefault = 24;
 export const getCatalogProductsQueryLimitMax = 100;
 
@@ -35,6 +39,8 @@ export const getCatalogProductsQueryOffsetMin = 0;
 export const GetCatalogProductsQueryParams = zod.object({
   "filters": zod.coerce.string().max(getCatalogProductsQueryFiltersMax).optional().describe('JSON object mapping facet keys to selected values'),
   "q": zod.coerce.string().max(getCatalogProductsQueryQMax).optional(),
+  "minPrice": zod.coerce.number().min(getCatalogProductsQueryMinPriceMin).optional(),
+  "maxPrice": zod.coerce.number().min(getCatalogProductsQueryMaxPriceMin).optional(),
   "limit": zod.coerce.number().int().min(1).max(getCatalogProductsQueryLimitMax).default(getCatalogProductsQueryLimitDefault),
   "offset": zod.coerce.number().int().min(getCatalogProductsQueryOffsetMin).default(getCatalogProductsQueryOffsetDefault)
 })
@@ -63,5 +69,15 @@ export const GetCatalogProductsResponse = zod.object({
   "limit": zod.number().int(),
   "offset": zod.number().int()
 })
+
+
+/**
+ * @summary List enabled categories from the configured catalog provider
+ */
+export const GetCatalogCategoriesResponseItem = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string()
+})
+export const GetCatalogCategoriesResponse = zod.array(GetCatalogCategoriesResponseItem)
 
 

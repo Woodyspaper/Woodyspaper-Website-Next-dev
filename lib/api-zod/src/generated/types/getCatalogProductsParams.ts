@@ -17,6 +17,14 @@ filters?: string;
  */
 q?: string;
 /**
+ * @minimum 0
+ */
+minPrice?: number;
+/**
+ * @minimum 0
+ */
+maxPrice?: number;
+/**
  * @minimum 1
  * @maximum 100
  */

@@ -45,6 +45,13 @@ export interface CatalogProductPage {
   offset: number;
 }
 
+export interface CatalogCategory {
+  id: number;
+  name: string;
+}
+
+export type CatalogCategories = CatalogCategory[];
+
 export type GetCatalogProductsParams = {
 /**
  * JSON object mapping facet keys to selected values
@@ -55,6 +62,14 @@ filters?: string;
  * @maxLength 100
  */
 q?: string;
+/**
+ * @minimum 0
+ */
+minPrice?: number;
+/**
+ * @minimum 0
+ */
+maxPrice?: number;
 /**
  * @minimum 1
  * @maximum 100

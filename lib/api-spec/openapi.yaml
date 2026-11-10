@@ -45,6 +45,18 @@ paths:
           schema:
             type: string
             maxLength: 100
+        - name: minPrice
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 0
+        - name: maxPrice
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 0
         - name: limit
           in: query
           required: false
@@ -69,6 +81,22 @@ paths:
                 $ref: "#/components/schemas/CatalogProductPage"
         "400":
           description: Invalid catalog query
+        "502":
+          description: Catalog provider could not be reached
+        "503":
+          description: Catalog provider is not configured
+  /catalog/categories:
+    get:
+      operationId: getCatalogCategories
+      tags: [catalog]
+      summary: List enabled categories from the configured catalog provider
+      responses:
+        "200":
+          description: Enabled product categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogCategories"
         "502":
           description: Catalog provider could not be reached
         "503":
@@ -155,4 +183,16 @@ components:
           type: string
         count:
           type: integer
+    CatalogCategory:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    CatalogCategories:
+      type: array
+      items:
+        $ref: "#/components/schemas/CatalogCategory"
 

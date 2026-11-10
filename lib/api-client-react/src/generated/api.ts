@@ -21,6 +21,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CatalogCategories,
   CatalogProductPage,
   GetCatalogProductsParams,
   HealthStatus
@@ -251,6 +252,107 @@ export function useGetCatalogProducts<TData = Awaited<ReturnType<typeof getCatal
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetCatalogProductsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetCatalogCategoriesUrl = () => {
+
+
+
+
+  return `/api/catalog/categories`
+}
+
+/**
+ * @summary List enabled categories from the configured catalog provider
+ */
+export const getCatalogCategories = async ( options?: Parameters<typeof customFetch>[1]): Promise<CatalogCategories> => {
+
+  return customFetch<CatalogCategories>(getGetCatalogCategoriesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCatalogCategoriesQueryKey = () => {
+    return [
+    `/api/catalog/categories`
+    ] as const;
+    }
+
+
+export const getGetCatalogCategoriesQueryOptions = <TData = Awaited<ReturnType<typeof getCatalogCategories>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogCategories>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCatalogCategoriesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCatalogCategories>>> = ({ signal }) => getCatalogCategories({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCatalogCategories>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCatalogCategoriesQueryResult = NonNullable<Awaited<ReturnType<typeof getCatalogCategories>>>
+export type GetCatalogCategoriesQueryError = ErrorType<void>
+
+
+export function useGetCatalogCategories<TData = Awaited<ReturnType<typeof getCatalogCategories>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogCategories>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCatalogCategories>>,
+          TError,
+          Awaited<ReturnType<typeof getCatalogCategories>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCatalogCategories<TData = Awaited<ReturnType<typeof getCatalogCategories>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogCategories>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCatalogCategories>>,
+          TError,
+          Awaited<ReturnType<typeof getCatalogCategories>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCatalogCategories<TData = Awaited<ReturnType<typeof getCatalogCategories>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogCategories>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List enabled categories from the configured catalog provider
+ */
+
+export function useGetCatalogCategories<TData = Awaited<ReturnType<typeof getCatalogCategories>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogCategories>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCatalogCategoriesQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

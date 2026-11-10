@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
 import {
   CatalogNotConfiguredError,
+  getLightspeedCategories,
   getLightspeedProducts,
   LightspeedRequestError,
 } from "../src/catalog/lightspeed.ts";
@@ -57,6 +58,10 @@ test("maps a bounded Lightspeed catalog page to the public API shape", async () 
 
   const page = await getLightspeedProducts({
     query: "  lunch   napkin ",
+    categoryId: 17,
+    availability: "in-stock",
+    minPrice: 2.5,
+    maxPrice: 12,
     limit: 24,
     offset: 48,
   });
@@ -64,6 +69,10 @@ test("maps a bounded Lightspeed catalog page to the public API shape", async () 
   assert.equal(requestedUrl?.origin, "https://app.ecwid.com");
   assert.equal(requestedUrl?.pathname, "/api/v3/123456/products");
   assert.equal(requestedUrl?.searchParams.get("keyword"), "lunch napkin");
+  assert.equal(requestedUrl?.searchParams.get("category"), "17");
+  assert.equal(requestedUrl?.searchParams.get("inStock"), "true");
+  assert.equal(requestedUrl?.searchParams.get("priceFrom"), "2.5");
+  assert.equal(requestedUrl?.searchParams.get("priceTo"), "12");
   assert.equal(requestedUrl?.searchParams.get("limit"), "24");
   assert.equal(requestedUrl?.searchParams.get("offset"), "48");
   assert.equal(requestedAuthorization, "Bearer test-server-token");
@@ -84,6 +93,32 @@ test("maps a bounded Lightspeed catalog page to the public API shape", async () 
       },
     ],
   });
+});
+
+test("returns enabled categories from the server-side provider API", async () => {
+  process.env.LIGHTSPEED_STORE_ID = "123456";
+  process.env.LIGHTSPEED_API_TOKEN = "test-server-token";
+
+  let requestedUrl: URL | undefined;
+  globalThis.fetch = async (input) => {
+    requestedUrl = new URL(String(input));
+    return Response.json({
+      total: 3,
+      items: [
+        { id: 10, name: "Paper", enabled: true },
+        { id: 11, name: "Hidden", enabled: false },
+        { id: 12, name: "Cleaning", enabled: true },
+      ],
+    });
+  };
+
+  assert.deepEqual(await getLightspeedCategories(), [
+    { id: 10, name: "Paper" },
+    { id: 12, name: "Cleaning" },
+  ]);
+  assert.equal(requestedUrl?.pathname, "/api/v3/123456/categories");
+  assert.equal(requestedUrl?.searchParams.get("responseFields"), "total,items(id,name,enabled)");
+  assert.equal(requestedUrl?.searchParams.get("offset"), "0");
 });
 
 test("does not treat an upstream provider failure as an empty catalog", async () => {
