@@ -37,6 +37,7 @@ export const getCatalogProductsQueryOffsetMin = 0;
 
 
 export const GetCatalogProductsQueryParams = zod.object({
+  "sort": zod.enum(['name-asc', 'name-desc', 'price-asc', 'price-desc']).optional().describe('Sort all matching products before paging. Omit for catalog order. Missing prices sort last in either price direction; ties use product ID ascending.'),
   "filters": zod.coerce.string().max(getCatalogProductsQueryFiltersMax).optional().describe('JSON object mapping facet keys to selected values'),
   "q": zod.coerce.string().max(getCatalogProductsQueryQMax).optional(),
   "minPrice": zod.coerce.number().min(getCatalogProductsQueryMinPriceMin).optional(),

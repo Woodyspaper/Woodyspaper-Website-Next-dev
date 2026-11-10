@@ -64,6 +64,7 @@ router.get("/catalog/products", async (req, res): Promise<void> => {
       query.data.limit,
       query.data.offset,
       { minPrice: query.data.minPrice, maxPrice: query.data.maxPrice },
+      query.data.sort,
     );
     res.json(GetCatalogProductsResponse.parse(page));
   } catch (error) {

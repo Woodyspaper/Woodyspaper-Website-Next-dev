@@ -32,6 +32,13 @@ paths:
       tags: [catalog]
       summary: List products from the configured catalog provider
       parameters:
+        - name: sort
+          in: query
+          required: false
+          description: Sort all matching products before paging. Omit for catalog order. Missing prices sort last in either price direction; ties use product ID ascending.
+          schema:
+            type: string
+            enum: [name-asc, name-desc, price-asc, price-desc]
         - name: filters
           in: query
           required: false

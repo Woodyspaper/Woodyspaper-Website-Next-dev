@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useGetCatalogProducts } from '@workspace/api-client-react'
+import { useGetCatalogProducts, GetCatalogProductsSort } from '@workspace/api-client-react'
 import type { CatalogProduct } from '@workspace/api-client-react'
 import { useRouter, useSearchParams } from '@/lib/navigation'
 
@@ -16,6 +16,8 @@ export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsP
   const params = useSearchParams()
   const queryFromUrl = (params.get('q') ?? initialQuery).trim().slice(0, 100)
   const offsetFromUrl = validIntegerParam(params.get('offset')) ?? 0
+  const rawSort = params.get('sort')
+  const sort = Object.values(GetCatalogProductsSort).find(value => value === rawSort)
   const minPriceFromUrl = validPriceParam(params.get('minPrice'))
   const maxPriceFromUrl = validPriceParam(params.get('maxPrice'))
   const filters = Object.fromEntries([...params.entries()]
@@ -41,6 +43,7 @@ export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsP
       maxPrice: maxPriceFromUrl === undefined ? undefined : Number(maxPriceFromUrl),
       limit: PAGE_SIZE,
       offset: offsetFromUrl,
+      sort,
     },
     { query: { staleTime: 30_000 } },
   )
@@ -164,6 +167,21 @@ export function CatalogProducts({ initialQuery = '', hubPath }: CatalogProductsP
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-ink shadow-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"
             />
           </div>
+        </div>
+        <div className="mt-4">
+          <label className="mb-1.5 block text-sm font-medium text-ink" htmlFor="catalog-sort">Sort by</label>
+          <select
+            id="catalog-sort"
+            value={sort ?? ''}
+            onChange={(event) => updateUrl({ sort: event.target.value || undefined, offset: undefined })}
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-ink shadow-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 sm:max-w-xs"
+          >
+            <option value="">Catalog order</option>
+            <option value="name-asc">Name: A to Z</option>
+            <option value="name-desc">Name: Z to A</option>
+            <option value="price-asc">Price: low to high</option>
+            <option value="price-desc">Price: high to low</option>
+          </select>
         </div>
         {filterError ? <p className="mt-3 text-sm text-rose-700" role="alert">{filterError}</p> : null}
         <div className="mt-5 flex flex-wrap justify-end gap-3">

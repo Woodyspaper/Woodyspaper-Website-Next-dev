@@ -54,6 +54,10 @@ export type CatalogCategories = CatalogCategory[];
 
 export type GetCatalogProductsParams = {
 /**
+ * Sort all matching products before paging. Omit for catalog order. Missing prices sort last in either price direction; ties use product ID ascending.
+ */
+sort?: GetCatalogProductsSort;
+/**
  * JSON object mapping facet keys to selected values
  * @maxLength 4000
  */
@@ -80,4 +84,14 @@ limit?: number;
  */
 offset?: number;
 };
+
+export type GetCatalogProductsSort = typeof GetCatalogProductsSort[keyof typeof GetCatalogProductsSort];
+
+
+export const GetCatalogProductsSort = {
+  'name-asc': 'name-asc',
+  'name-desc': 'name-desc',
+  'price-asc': 'price-asc',
+  'price-desc': 'price-desc',
+} as const;
 

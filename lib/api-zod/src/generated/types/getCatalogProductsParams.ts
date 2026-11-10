@@ -5,8 +5,13 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { GetCatalogProductsSort } from './getCatalogProductsSort';
 
 export type GetCatalogProductsParams = {
+/**
+ * Sort all matching products before paging. Omit for catalog order. Missing prices sort last in either price direction; ties use product ID ascending.
+ */
+sort?: GetCatalogProductsSort;
 /**
  * JSON object mapping facet keys to selected values
  * @maxLength 4000

@@ -191,6 +191,51 @@ test('catalog search, category, availability, and price filters work with paging
   await expect(page).toHaveURL(/filter.availability=in-stock/)
 })
 
+test('catalog sort survives paging, reload, history and filter changes', async ({ page }) => {
+  const requests: URL[] = []
+  await page.route('**/api/catalog/products**', async route => {
+    const url = new URL(route.request().url())
+    requests.push(url)
+    await route.fulfill({ json: {
+      items: [{ id: 1, name: 'Paper', sku: null, price: 10, priceFormatted: '$10',
+        inStock: true, imageUrl: null, productUrl: null }],
+      total: 50, limit: 24, offset: Number(url.searchParams.get('offset') || 0), facets: testFacets,
+    } })
+  })
+  await page.goto('/inventory?q=paper&filter.category=17&minPrice=1&maxPrice=20&offset=24')
+  for (const sort of ['name-asc', 'name-desc', 'price-asc', 'price-desc']) {
+    await page.getByLabel('Sort by').selectOption(sort)
+    await expect(page).toHaveURL(new RegExp(`sort=${sort}`))
+    await expect(page).not.toHaveURL(/offset=/)
+    await expect.poll(() => requests.at(-1)?.searchParams.get('sort')).toBe(sort)
+    const params = requests.at(-1)!.searchParams
+    expect(params.get('q')).toBe('paper')
+    expect(params.get('minPrice')).toBe('1')
+    expect(params.get('maxPrice')).toBe('20')
+    expect(JSON.parse(params.get('filters')!)).toEqual({ category: '17' })
+  }
+  await page.getByRole('button', { name: 'Next', exact: true }).click()
+  await expect(page).toHaveURL(/offset=24/)
+  await expect(page.getByText('50 products', { exact: true })).toBeVisible()
+  await page.reload()
+  await expect(page.getByLabel('Sort by')).toHaveValue('price-desc')
+  await expect.poll(() => requests.at(-1)?.searchParams.get('offset')).toBe('24')
+  expect(requests.at(-1)?.searchParams.get('sort')).toBe('price-desc')
+  await page.getByLabel('Sort by').selectOption('name-asc')
+  await expect(page).not.toHaveURL(/offset=/)
+  await page.goBack()
+  await expect(page.getByLabel('Sort by')).toHaveValue('price-desc')
+  await expect(page).toHaveURL(/offset=24/)
+  await page.getByLabel('Availability', { exact: true }).selectOption('in-stock')
+  await expect(page).toHaveURL(/sort=price-desc/)
+  await expect(page).not.toHaveURL(/offset=/)
+  await page.getByRole('button', { name: 'Clear filters', exact: true }).click()
+  await expect(page).toHaveURL(/\/inventory\?sort=price-desc$/)
+  await page.getByLabel('Sort by').selectOption('')
+  await expect(page).toHaveURL(/\/inventory$/)
+  await expect.poll(() => requests.at(-1)?.searchParams.has('sort')).toBe(false)
+})
+
 const testFacets = [
   { key: 'category', label: 'Category', options: [
     { value: 'paper', label: 'Paper', count: 1 },

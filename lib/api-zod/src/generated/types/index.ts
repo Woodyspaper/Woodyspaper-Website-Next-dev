@@ -13,4 +13,5 @@ export * from './catalogFacetOption';
 export * from './catalogProduct';
 export * from './catalogProductPage';
 export * from './getCatalogProductsParams';
+export * from './getCatalogProductsSort';
 export * from './healthStatus';

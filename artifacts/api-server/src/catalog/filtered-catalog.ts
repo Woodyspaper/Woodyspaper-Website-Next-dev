@@ -1,5 +1,8 @@
 import { CatalogNotConfiguredError, LightspeedRequestError, type CatalogProduct } from "./lightspeed.ts";
 import { sizeFromName } from "./product-size.ts";
+import type { GetCatalogProductsParams } from "@workspace/api-zod";
+
+type CatalogSort = GetCatalogProductsParams["sort"];
 
 type RawProduct = {
   id: number; name: string; sku?: string; defaultDisplayedPrice?: number;
@@ -76,6 +79,7 @@ export function filterSnapshot(
   limit: number,
   offset: number,
   priceRange: { minPrice?: number; maxPrice?: number } = {},
+  sort?: CatalogSort,
 ) {
   const words = (query || "").trim().toLowerCase().split(/\s+/).filter(Boolean);
   const searched = snapshot.products.filter(p => words.every(word =>
@@ -89,6 +93,18 @@ export function filterSnapshot(
       (priceRange.maxPrice === undefined || p.product.price <= priceRange.maxPrice);
   };
   const filtered = searched.filter(p => matches(p) && matchesPrice(p));
+  if (sort) {
+    const direction = sort.endsWith("-desc") ? -1 : 1;
+    filtered.sort(({ product: a }, { product: b }) => {
+      if (sort.startsWith("price-")) {
+        // Unknown prices stay last in both directions.
+        if (a.price === null && b.price !== null) return 1;
+        if (b.price === null && a.price !== null) return -1;
+        return direction * ((a.price ?? 0) - (b.price ?? 0)) || a.id - b.id;
+      }
+      return direction * a.name.localeCompare(b.name, "en", { numeric: true, sensitivity: "base" }) || a.id - b.id;
+    });
+  }
   const priority = ["category", "availability", "brand", "size", "color", "finish"];
   const facets = [...snapshot.labels].map(([key, label]) => {
     const counts = new Map<string, number>();
@@ -158,6 +174,7 @@ export async function getFilteredCatalog(
   limit: number,
   offset: number,
   priceRange: { minPrice?: number; maxPrice?: number } = {},
+  sort?: CatalogSort,
 ) {
-  return filterSnapshot(await loadSnapshot(), query, filters, limit, offset, priceRange);
+  return filterSnapshot(await loadSnapshot(), query, filters, limit, offset, priceRange, sort);
 }
