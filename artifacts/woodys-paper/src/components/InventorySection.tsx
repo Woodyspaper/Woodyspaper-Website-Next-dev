@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { AccountPrompt } from './AccountPrompt'
 import { CatalogProducts } from './CatalogProducts'
 import { LightSpeedStore } from './LightSpeedStore'
@@ -13,6 +14,8 @@ type InventorySectionProps = {
 }
 
 export function InventorySection({ initialQuery = '', openAccount = false, hubPath }: InventorySectionProps) {
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
+
   return (
     <Reveal as="section" id="products" className="scroll-mt-chrome px-4 py-12 sm:py-20 lg:scroll-mt-chrome-lg">
       <div className="mx-auto max-w-7xl">
@@ -36,7 +39,10 @@ export function InventorySection({ initialQuery = '', openAccount = false, hubPa
         ) : (
           <>
             <CatalogProducts initialQuery={initialQuery} hubPath={hubPath} />
-            <details className="mx-auto mt-12 max-w-4xl rounded-panel border border-slate-200 bg-white p-5 shadow-glass">
+            <details
+              className="mx-auto mt-12 max-w-4xl rounded-panel border border-slate-200 bg-white p-5 shadow-glass"
+              onToggle={(event) => setCheckoutOpen(event.currentTarget.open)}
+            >
               <summary className="cursor-pointer font-semibold text-brand-blue">
                 Open the existing Lightspeed store
               </summary>
@@ -44,15 +50,17 @@ export function InventorySection({ initialQuery = '', openAccount = false, hubPa
                 Use the current store for shopping cart, checkout, and customer account features.
                 Product cards above link to the provider’s product pages.
               </p>
-              <LightSpeedStore
-                productsPerPage={30}
-                showSearch={false}
-                defaultCategoryId={0}
-                design={{
-                  productListCardSpacingType: 'wide',
-                  product_list_category_title_behavior: 'SHOW_BELOW_IMAGE',
-                }}
-              />
+              {checkoutOpen ? (
+                <LightSpeedStore
+                  productsPerPage={30}
+                  showSearch={false}
+                  defaultCategoryId={0}
+                  design={{
+                    productListCardSpacingType: 'wide',
+                    product_list_category_title_behavior: 'SHOW_BELOW_IMAGE',
+                  }}
+                />
+              ) : null}
             </details>
           </>
         )}

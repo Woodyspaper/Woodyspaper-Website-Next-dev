@@ -36,6 +36,13 @@ router.get("/catalog/products", async (req, res) => {
         { upstreamStatus: error.upstreamStatus },
         "Lightspeed catalog request failed",
       );
+      if (error.upstreamStatus === 401 || error.upstreamStatus === 403) {
+        res.status(502).json({
+          error:
+            "Lightspeed denied catalog access. Check that the API token belongs to this store and has read_catalog permission.",
+        });
+        return;
+      }
       res.status(502).json({
         error: "The online catalog is temporarily unavailable. Please try again.",
       });

@@ -106,7 +106,9 @@ const siteTheme = (): ChameleonTheme => {
       'color-button': blue,
       'color-price': blue,
     },
-    font: { 'font-family': token('--font-sans', "'Inter', sans-serif") },
+    // Ecwid builds a stylesheet URL from this value and later uses it in a
+    // CSS selector; quotes in the query value make that selector invalid.
+    font: { 'font-family': token('--font-sans', 'Inter, sans-serif').replace(/['"]/g, '') },
   }
 }
 
