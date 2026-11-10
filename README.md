@@ -32,6 +32,18 @@ Useful commands:
 - `pnpm run typecheck` - typecheck all packages
 - `pnpm --filter @workspace/api-server test` - API unit tests
 
+## Working with Replit and a local PC
+
+GitHub is the hub. Your PC and Replit both push to and pull from this repo. Never copy files between them by hand.
+
+- `main` is the stable branch that Replit deploys.
+- Do each piece of work on its own branch (for example `dev/local-...` on the PC, `dev/replit-...` on Replit), then merge it into `main` with a pull request.
+- Don't edit the same branch on both sides at once. When switching sides, push first, then pull on the other side.
+- Before starting work: `git switch main`, `git pull`, then create or switch to your branch.
+- After a merge, pull `main` on the other side. Run `pnpm install` if `pnpm-lock.yaml` changed (Replit does this automatically via `scripts/post-merge.sh`).
+- Secrets stay separate: Replit Secrets on Replit, `.env` on the PC. Never commit keys.
+- Keep the Replit files (`.replit`, `replit.md`, `artifacts/*/.replit-artifact/`) committed. Replit needs them, and they don't affect local runs.
+
 Notes:
 
 - Local runs use the same database and Lightspeed store as Replit when you copy Replit's `DATABASE_URL`, so treat test accounts and data with care. Don't send real inquiries or place orders while testing.
