@@ -8,7 +8,6 @@ import {
   useGetAccount,
   useGetAccountOrders,
   useGetAccountPricing,
-  useLinkLightspeedAccount,
   useUnlinkProviderAccount,
   type AccountPricingOffer,
   type ProviderAccountLink,
@@ -16,6 +15,7 @@ import {
 } from '@workspace/api-client-react'
 import Link from '@/lib/navigation'
 import { serverMessage } from '@/lib/apiError'
+import { LightspeedLinkForm } from '@/components/LightspeedLinkForm'
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '')
 const PAGE_SIZE = 10
@@ -136,10 +136,10 @@ function AccountBody({ account }: { account: WoodyAccount }) {
 
       <div className="space-y-6">
         <Panel kicker="Lightspeed" title="Pricing & benefits" id="pricing">
-          {activeLink ? <PricingBody /> : <Empty>Link your Lightspeed customer account to see your customer group and available promotions.</Empty>}
+          {activeLink ? <PricingBody key={activeLink.id} linkId={activeLink.id} /> : <Empty>Link your Lightspeed customer account to see your customer group and available promotions.</Empty>}
         </Panel>
         <Panel kicker="Lightspeed" title="Order history" id="orders">
-          {activeLink ? <OrdersBody offset={offset} setOffset={setOffset} /> : <Empty>Order history appears here once your Lightspeed customer account is linked.</Empty>}
+          {activeLink ? <OrdersBody key={activeLink.id} linkId={activeLink.id} offset={offset} setOffset={setOffset} /> : <Empty>Order history appears here once your Lightspeed customer account is linked.</Empty>}
         </Panel>
       </div>
     </div>
@@ -166,11 +166,7 @@ function useInvalidateAccount() {
 
 function ProviderLinks({ account, onChanged }: { account: WoodyAccount; onChanged: () => void }) {
   const invalidate = useInvalidateAccount()
-  const [consent, setConsent] = useState(false)
   const [confirming, setConfirming] = useState<ProviderAccountLink | null>(null)
-  const link = useLinkLightspeedAccount({
-    mutation: { onSuccess: () => { setConsent(false); onChanged(); invalidate() } },
-  })
   const unlink = useUnlinkProviderAccount({
     mutation: { onSuccess: () => { setConfirming(null); onChanged(); invalidate() } },
   })
@@ -226,19 +222,7 @@ function ProviderLinks({ account, onChanged }: { account: WoodyAccount; onChange
         <div className="mt-6 rounded-2xl bg-brand-mist p-5 text-sm">
           <h3 className="font-sans text-base font-bold text-ink">Link your Lightspeed customer account</h3>
           {account.emailVerified ? (
-            <>
-              <p className="mt-2 text-slate-700">
-                We&rsquo;ll look up the Lightspeed customer that uses your verified email, <strong className="break-all">{account.email}</strong>. No other email or customer ID can be used, and your Lightspeed password is never imported.
-              </p>
-              <label className="mt-4 flex items-start gap-3 text-slate-700">
-                <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 size-4 accent-brand-blue" data-testid="checkbox-link-consent" />
-                <span>I agree to link my Lightspeed customer record to this website account.</span>
-              </label>
-              {link.isError ? <div className="mt-3"><ErrorBox testId="link-error" message={serverMessage(link.error)} /></div> : null}
-              <button type="button" className={`${btnPrimary} mt-4`} disabled={!consent || link.isPending} onClick={() => link.mutate()} data-testid="button-link-lightspeed">
-                {link.isPending ? 'Linking...' : 'Link Lightspeed account'}
-              </button>
-            </>
+            <LightspeedLinkForm initialEmail={account.email} onLinked={() => { onChanged(); invalidate() }} />
           ) : (
             <p className="mt-2 text-slate-700">
               Verify your email first. Go to <Link href="/account/security" className="font-semibold text-brand-blue underline">Profile &amp; security</Link> to finish verification.
@@ -256,8 +240,8 @@ function offerLabel(o: AccountPricingOffer) {
   return value
 }
 
-function PricingBody() {
-  const pricing = useGetAccountPricing()
+function PricingBody({ linkId }: { linkId: string }) {
+  const pricing = useGetAccountPricing({ query: { queryKey: [...getGetAccountPricingQueryKey(), linkId] } })
   if (pricing.isLoading) return <Skeleton rows={4} />
   if (pricing.isError)
     return <ErrorBox testId="pricing-error" message={`Lightspeed pricing is unavailable right now. Your website account is fine. ${serverMessage(pricing.error)}`} onRetry={() => pricing.refetch()} />
@@ -296,8 +280,9 @@ function PricingBody() {
   )
 }
 
-function OrdersBody({ offset, setOffset }: { offset: number; setOffset: (n: number) => void }) {
-  const orders = useGetAccountOrders({ limit: PAGE_SIZE, offset })
+function OrdersBody({ linkId, offset, setOffset }: { linkId: string; offset: number; setOffset: (n: number) => void }) {
+  const params = { limit: PAGE_SIZE, offset }
+  const orders = useGetAccountOrders(params, { query: { queryKey: [...getGetAccountOrdersQueryKey(params), linkId] } })
   if (orders.isLoading) return <Skeleton rows={5} />
   if (orders.isError)
     return <ErrorBox testId="orders-error" message={`Order history from Lightspeed is unavailable right now. Your website account is fine. ${serverMessage(orders.error)}`} onRetry={() => orders.refetch()} />

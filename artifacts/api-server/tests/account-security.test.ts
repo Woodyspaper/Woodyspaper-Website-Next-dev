@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
 import {
-  assertVerifiedLink, findCustomer, getOrders, mapOwnedOrders, matchVerifiedCustomer, pricingOffers,
+  assertVerifiedLink, findCustomer, getOrders, mapOwnedOrders, matchVerifiedCustomer, pricingOffers, requireVerifiedLinkEmail,
 } from "../src/accounts/lightspeed-account.ts";
 import { AccountError } from "../src/accounts/errors.ts";
+import { LinkLightspeedAccountBody } from "../../../lib/api-zod/src/generated/api.ts";
 
 const customer = { id: 42, email: "customer@example.com", customerGroupId: 5 };
 const denied = (status: number) => (e: unknown) => e instanceof AccountError && e.status === status;
@@ -13,6 +14,26 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   if (originalToken === undefined) delete process.env.LIGHTSPEED_API_TOKEN;
   else process.env.LIGHTSPEED_API_TOKEN = originalToken;
+});
+
+test("a verified secondary email can link without changing the primary email", () => {
+  const verified = ['primary@example.com', 'secondary@example.com'];
+  assert.equal(requireVerifiedLinkEmail(' Secondary@Example.com ', verified), 'secondary@example.com');
+  assert.deepEqual(verified, ['primary@example.com', 'secondary@example.com']);
+});
+
+test("unverified, foreign, and removed emails cannot be used to link", () => {
+  assert.throws(() => requireVerifiedLinkEmail('unverified@example.com', ['primary@example.com']), denied(403));
+  assert.throws(() => requireVerifiedLinkEmail('secondary@example.com', []), denied(403));
+  assert.throws(() => requireVerifiedLinkEmail('', ['primary@example.com']), denied(403));
+});
+
+test("link input rejects customer IDs, client verification claims, and invalid emails", () => {
+  const schema = LinkLightspeedAccountBody.strict();
+  assert.ok(schema.safeParse({ email: 'secondary@example.com' }).success);
+  for (const value of [undefined, {}, { email: 'invalid' }, { email: 'secondary@example.com', verified: true }, { email: 'secondary@example.com', customerId: '42' }]) {
+    assert.equal(schema.safeParse(value).success, false);
+  }
 });
 
 test("linking requires a single exact verified-email match", () => {

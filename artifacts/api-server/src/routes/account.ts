@@ -3,11 +3,11 @@ import { and, eq } from "drizzle-orm";
 import { db, providerAccountLinks } from "@workspace/db";
 import {
   GetAccountResponse, GetAccountPricingResponse, GetAccountOrdersResponse,
-  GetAccountOrdersQueryParams, UnlinkProviderAccountParams,
+  GetAccountOrdersQueryParams, UnlinkProviderAccountParams, LinkLightspeedAccountBody,
 } from "@workspace/api-zod";
 import { accountResponse, loadIdentity, type AccountIdentity } from "../accounts/identity";
 import { AccountError } from "../accounts/errors";
-import { assertVerifiedLink, findCustomer, getCustomer, getOrders, getPricing, lightspeedStoreId, normalizeEmail } from "../accounts/lightspeed-account";
+import { assertVerifiedLink, findCustomer, getCustomer, getOrders, getPricing, lightspeedStoreId, normalizeEmail, requireVerifiedLinkEmail } from "../accounts/lightspeed-account";
 import { getClerkProxyHost } from "../middlewares/clerkProxyMiddleware";
 
 const router = Router();
@@ -72,25 +72,27 @@ router.post("/account/links/lightspeed", async (req, res) => {
   try {
     const identity = identityOf(res);
     if (!identity.emailVerified || !identity.email) throw new AccountError(403, "Verify your primary website email before linking Lightspeed.");
-    if (req.body && Object.keys(req.body).length) throw new AccountError(400, "Linking uses your verified website email only. Do not supply a customer ID.");
+    const input = LinkLightspeedAccountBody.strict().safeParse(req.body);
+    if (!input.success) throw new AccountError(400, "Enter a valid Lightspeed email address. Customer IDs and verification flags are not accepted.");
     linkRateLimit(identity.authUserId);
+    const linkedEmail = requireVerifiedLinkEmail(input.data.email, identity.verifiedEmails);
     const storeId = lightspeedStoreId();
     if (!storeId) throw new AccountError(503, "Lightspeed is not configured.");
-    const customer = await findCustomer(storeId, identity.email);
+    const customer = await findCustomer(storeId, linkedEmail);
     const conditions = and(
       eq(providerAccountLinks.accountId, identity.accountId),
       eq(providerAccountLinks.provider, "lightspeed"),
       eq(providerAccountLinks.storeId, storeId),
     );
     const [existing] = await db.select().from(providerAccountLinks).where(conditions).limit(1);
-    if (existing && (existing.customerId !== String(customer.id) || normalizeEmail(existing.verifiedEmail) !== normalizeEmail(identity.email))) {
+    if (existing && (existing.customerId !== String(customer.id) || normalizeEmail(existing.verifiedEmail) !== linkedEmail)) {
       throw new AccountError(409, "Disconnect the existing Lightspeed link before linking another customer.");
     }
     if (!existing) {
       try {
         await db.insert(providerAccountLinks).values({
           accountId: identity.accountId, provider: "lightspeed", storeId,
-          customerId: String(customer.id), verifiedEmail: normalizeEmail(identity.email),
+          customerId: String(customer.id), verifiedEmail: linkedEmail,
         });
       } catch (error) {
         const e = error as { code?: string; cause?: { code?: string } };

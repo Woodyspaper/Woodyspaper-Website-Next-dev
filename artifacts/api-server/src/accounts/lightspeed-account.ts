@@ -19,6 +19,15 @@ type Promotion = {
 };
 
 export const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
+// Only the server's fresh Clerk user record can establish email ownership.
+export function requireVerifiedLinkEmail(email: string, verifiedEmails: string[]) {
+  const normalized = normalizeEmail(email);
+  if (!normalized || !verifiedEmails.some(value => normalizeEmail(value) === normalized)) {
+    throw new AccountError(403, "Verify this Lightspeed email with the code sent to that address before linking.");
+  }
+  return normalized;
+}
 export function lightspeedStoreId() {
   const id = process.env.LIGHTSPEED_STORE_ID || process.env.VITE_LIGHTSPEED_STORE_ID;
   return id && /^\d+$/.test(id) ? id : null;

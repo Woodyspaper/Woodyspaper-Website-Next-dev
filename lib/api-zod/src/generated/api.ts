@@ -25,8 +25,16 @@ export const GetAccountResponse = zod.object({
 
 
 /**
- * Link using only the authenticated user's verified primary email. No client customer ID is accepted.
+ * Link using a selected email verified on the authenticated user's website account. Verification is checked server-side; no client customer ID or verification flag is accepted.
  */
+export const linkLightspeedAccountBodyEmailMax = 254;
+
+
+
+export const LinkLightspeedAccountBody = zod.object({
+  "email": zod.string().email().max(linkLightspeedAccountBodyEmailMax)
+})
+
 export const LinkLightspeedAccountResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),

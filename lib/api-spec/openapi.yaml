@@ -30,8 +30,16 @@ paths:
     post:
       operationId: linkLightspeedAccount
       tags: [account]
-      description: Link using only the authenticated user's verified primary email. No client customer ID is accepted.
+      description: Link using a selected email verified on the authenticated user's website account. Verification is checked server-side; no client customer ID or verification flag is accepted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProviderLinkInput"
       responses:
+        "400":
+          description: Invalid email or request body
         "200":
           description: Updated account
           content:
@@ -212,6 +220,15 @@ paths:
           description: Catalog provider is not configured
 components:
   schemas:
+    ProviderLinkInput:
+      type: object
+      additionalProperties: false
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
     WoodyAccount:
       type: object
       required: [id, email, emailVerified, displayName, links, activeLightspeedStoreId]

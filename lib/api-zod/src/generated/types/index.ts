@@ -22,4 +22,5 @@ export * from './getCatalogProductsParams';
 export * from './getCatalogProductsSort';
 export * from './healthStatus';
 export * from './providerAccountLink';
+export * from './providerLinkInput';
 export * from './woodyAccount';

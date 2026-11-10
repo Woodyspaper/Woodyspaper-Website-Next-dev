@@ -1,3 +1,4 @@
 - [Catalog filter data](catalog-filter-data.md) — prefer public structured fields; the user requests explicit name dimensions as a size fallback.
+- [Provider email verification](provider-email-verification.md) — reuse trusted email verification; disclose the secondary sign-in-address tradeoff.
 - [Migration browser testing](migration-browser-testing.md) — the documented testing worker was unavailable; use direct Playwright when that runtime rejects it.
 - [Pushing imported workspace history](github-dev-repo-push.md) — Replit’s imported clone may be shallow; fetch the source history before seeding a separate development repository.

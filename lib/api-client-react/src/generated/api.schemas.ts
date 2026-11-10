@@ -5,6 +5,11 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface ProviderLinkInput {
+  /** @maxLength 254 */
+  email: string;
+}
+
 export interface ProviderAccountLink {
   id: string;
   provider: string;

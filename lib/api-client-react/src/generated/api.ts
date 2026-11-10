@@ -32,11 +32,12 @@ import type {
   GetAccountOrdersParams,
   GetCatalogProductsParams,
   HealthStatus,
+  ProviderLinkInput,
   WoodyAccount
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
-import type { ErrorType } from '../custom-fetch';
+import type { ErrorType , BodyType } from '../custom-fetch';
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -166,16 +167,30 @@ export const getLinkLightspeedAccountUrl = () => {
 }
 
 /**
- * Link using only the authenticated user's verified primary email. No client customer ID is accepted.
+ * Link using a selected email verified on the authenticated user's website account. Verification is checked server-side; no client customer ID or verification flag is accepted.
  */
-export const linkLightspeedAccount = async ( options?: Parameters<typeof customFetch>[1]): Promise<WoodyAccount> => {
+export const linkLightspeedAccount = async (providerLinkInput: ProviderLinkInput, options?: Parameters<typeof customFetch>[1]): Promise<WoodyAccount> => {
 
-  return customFetch<WoodyAccount>(getLinkLightspeedAccountUrl(),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<WoodyAccount>(getLinkLightspeedAccountUrl(),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(providerLinkInput)
   }
 );}
 
@@ -186,8 +201,8 @@ export const linkLightspeedAccount = async ( options?: Parameters<typeof customF
 export const getLinkLightspeedAccountMutationKey = () => ['linkLightspeedAccount'] as const;
 
 export const getLinkLightspeedAccountMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof linkLightspeedAccount>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof linkLightspeedAccount>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof linkLightspeedAccount>>, TError,LinkLightspeedAccountMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof linkLightspeedAccount>>, TError,LinkLightspeedAccountMutationVariables, TContext> => {
 
 const mutationKey = getLinkLightspeedAccountMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -199,10 +214,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof linkLightspeedAccount>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof linkLightspeedAccount>>, LinkLightspeedAccountMutationVariables> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  linkLightspeedAccount(requestOptions)
+          return  linkLightspeedAccount(data,requestOptions)
         }
 
 
@@ -213,16 +228,16 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type LinkLightspeedAccountMutationResult = NonNullable<Awaited<ReturnType<typeof linkLightspeedAccount>>>
-
+    export type LinkLightspeedAccountMutationBody = BodyType<ProviderLinkInput>
     export type LinkLightspeedAccountMutationError = ErrorType<void>
-
+    export type LinkLightspeedAccountMutationVariables = {data: BodyType<ProviderLinkInput>}
 
     export const useLinkLightspeedAccount = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof linkLightspeedAccount>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof linkLightspeedAccount>>, TError,LinkLightspeedAccountMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof linkLightspeedAccount>>,
         TError,
-        void,
+        LinkLightspeedAccountMutationVariables,
         TContext
       > => {
       return useMutation(getLinkLightspeedAccountMutationOptions(options), queryClient);
