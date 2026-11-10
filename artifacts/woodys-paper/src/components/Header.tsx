@@ -12,7 +12,6 @@ import { CategoryBar } from './CategoryBar'
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
-  const onInventory = pathname === '/inventory'
   const customer = useStoreCustomer()
   // Signed in: the customer's first name (or "My Account" if the store has no name for them).
   const accountLabel = customer ? customer.name?.trim().split(/\s+/)[0] || 'My Account' : 'Sign In'
@@ -50,6 +49,7 @@ export function Header() {
    * owns the URL's #!/ hash there), so scroll to the form directly and leave
    * the address alone. From other pages the link navigates as usual.
    */
+  /* Temporarily disabled with the Supply Inquiry header links.
   const goToContact = (event: MouseEvent<HTMLAnchorElement>) => {
     close()
     if (pathname !== '/') return
@@ -58,6 +58,7 @@ export function Header() {
     event.preventDefault()
     form.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
+  */
 
   return (
     <>
@@ -68,6 +69,7 @@ export function Header() {
           <HeaderSearch className="order-last w-full pb-2 lg:order-none lg:w-auto lg:max-w-xl lg:flex-1 lg:pb-0" />
 
           <nav aria-label="Primary" className="hidden items-center shrink-0 gap-8 font-semibold text-slate-600 lg:flex">
+            {/* Supply Inquiry temporarily hidden.
             <Link
               href="/#contact"
               onClick={goToContact}
@@ -75,13 +77,7 @@ export function Header() {
             >
               Supply Inquiry
             </Link>
-            <Link
-              href="/inventory"
-              aria-current={onInventory ? 'page' : undefined}
-              className={`transition-colors hover:text-brand-blue ${onInventory ? 'text-brand-blue' : ''}`}
-            >
-              Inventory
-            </Link>
+            */}
             <Link
               href={ACCOUNT_PATH}
               title={accountTitle}
@@ -118,7 +114,6 @@ export function Header() {
         hidden={!menuOpen}
         className="fixed inset-x-0 top-chrome z-40 flex flex-col gap-6 border-b border-slate-200 bg-white/98 px-6 py-8 text-center text-lg font-semibold text-slate-700 shadow-lift backdrop-blur-xl lg:hidden"
       >
-        <Link href="/inventory" onClick={close} className="text-brand-blue">Inventory</Link>
         <Link href={ACCOUNT_PATH} onClick={close} title={accountTitle} className="inline-flex items-center justify-center gap-2">
           {customer ? (
             <svg viewBox="0 0 20 20" fill="currentColor" className="size-4 shrink-0 text-brand-blue" aria-hidden="true">
@@ -127,7 +122,9 @@ export function Header() {
           ) : null}
           {accountLabel}
         </Link>
+        {/* Supply Inquiry temporarily hidden.
         <Link href="/#contact" onClick={goToContact}>Direct Inquiry</Link>
+        */}
       </div>
     </>
   )
